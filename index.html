@@ -1,0 +1,2627 @@
+<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MogMeter — Live Camera Jawline, Symmetry & PSL Scanner</title>
+    <meta
+      name="description"
+      content="Live camera 478-point facial mapping and 21-angle 3D fusion to rate your jawline, gonial angle, symmetry, canthal tilt, and Chad PSL tier."
+    />
+    <meta property="og:title" content="MogMeter — Live Camera Jawline, Symmetry & PSL Scanner" />
+    <meta
+      property="og:description"
+      content="Live camera 478-point facial mapping and 21-angle 3D fusion to rate your jawline, symmetry, and Chad PSL tier."
+    />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400..700;1,9..40,400..700&family=JetBrains+Mono:wght@400;500;600;700&family=Oswald:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #0a0a0c;
+        --surface: #131317;
+        --stage: #121216;
+        --accent: #e11d48;
+        --accent-hover: #be123c;
+        --text: #f4f4f5;
+        --muted: #a1a1aa;
+        --subtle: #71717a;
+        --border: rgba(255, 255, 255, 0.1);
+        --border-strong: rgba(255, 255, 255, 0.16);
+      }
+      *, *::before, *::after {
+        box-sizing: border-box;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        -webkit-font-smoothing: antialiased;
+        line-height: 1.5;
+      }
+      ::selection {
+        background: var(--accent);
+        color: #fff;
+      }
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+      button {
+        font-family: inherit;
+        cursor: pointer;
+        border: 0;
+        background: none;
+        color: inherit;
+      }
+      button:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+      }
+      button:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+      .font-display {
+        font-family: 'Oswald', 'DM Sans', sans-serif;
+        letter-spacing: -0.02em;
+      }
+      .font-mono-tabular {
+        font-family: 'JetBrains Mono', ui-monospace, monospace;
+        font-variant-numeric: tabular-nums;
+      }
+      .container {
+        width: 100%;
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 0 24px;
+      }
+
+      /* Top Bar */
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 30;
+        border-bottom: 1px solid var(--border);
+        background: rgba(10, 10, 12, 0.9);
+        backdrop-filter: blur(12px);
+      }
+      .topbar-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 32px;
+        padding: 16px 24px;
+      }
+      .brand {
+        font-size: 20px;
+        font-weight: 700;
+        color: #fff;
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+      .nav {
+        display: none;
+        align-items: center;
+        gap: 28px;
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--muted);
+      }
+      .nav a {
+        white-space: nowrap;
+        transition: color 0.15s ease;
+      }
+      .nav a:hover {
+        color: #fff;
+      }
+      @media (min-width: 768px) {
+        .nav {
+          display: flex;
+        }
+      }
+
+      /* Buttons */
+      .btn-primary {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        white-space: nowrap;
+        flex-shrink: 0;
+        border-radius: 8px;
+        background: var(--accent);
+        color: #fff;
+        font-weight: 600;
+        transition: background 0.15s ease, transform 0.1s ease;
+      }
+      .btn-primary:hover:not(:disabled) {
+        background: var(--accent-hover);
+      }
+      .btn-primary:active:not(:disabled) {
+        transform: scale(0.99);
+      }
+      .btn-sm {
+        padding: 8px 14px;
+        font-size: 12px;
+      }
+      .btn-lg {
+        min-height: 46px;
+        width: 100%;
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+      .btn-standby {
+        min-height: 46px;
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+      .btn-secondary {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        white-space: nowrap;
+        flex-shrink: 0;
+        border-radius: 8px;
+        border: 1px solid var(--border-strong);
+        background: var(--surface);
+        color: #e4e4e7;
+        padding: 8px 14px;
+        font-size: 12px;
+        font-weight: 500;
+        transition: background 0.15s ease, color 0.15s ease;
+      }
+      .btn-secondary:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+      }
+
+      /* Main Scanner Layout */
+      .scanner-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 32px;
+        padding: 32px 0;
+        align-items: start;
+      }
+      @media (min-width: 1024px) {
+        .scanner-grid {
+          grid-template-columns: 7fr 5fr;
+          gap: 40px;
+          padding: 40px 0;
+        }
+      }
+      .stack-sm {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      /* Camera Viewport */
+      .camera-stage {
+        position: relative;
+        width: 100%;
+        height: 520px;
+        overflow: hidden;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: var(--stage);
+        box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5);
+      }
+      @media (min-width: 640px) {
+        .camera-stage {
+          height: 600px;
+        }
+      }
+      @media (min-width: 1024px) {
+        .camera-stage {
+          height: 680px;
+        }
+      }
+      .camera-video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transform: scaleX(-1);
+        display: block;
+      }
+      .snapshot-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+      .standby-box {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+        height: 100%;
+        padding: 24px;
+        text-align: center;
+      }
+      .standby-icon {
+        width: 64px;
+        height: 64px;
+        border-radius: 999px;
+        border: 1px solid var(--border-strong);
+        background: rgba(255, 255, 255, 0.05);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #e4e4e7;
+      }
+      .overlay-canvas {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        transition: opacity 0.15s ease;
+      }
+      .brackets-svg {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+      }
+      .hud-top {
+        position: absolute;
+        inset: 0 0 auto 0;
+        pointer-events: none;
+        padding: 16px 20px 32px;
+        background: linear-gradient(to bottom, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.42) 60%, transparent);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        font-size: 12px;
+      }
+      .radar-box {
+        border-radius: 4px;
+        border: 1px solid var(--border-strong);
+        background: rgba(0, 0, 0, 0.6);
+        padding: 4px;
+        backdrop-filter: blur(4px);
+      }
+      .hud-bottom-scrim {
+        position: absolute;
+        inset: auto 0 0 0;
+        height: 96px;
+        pointer-events: none;
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.4) 60%, transparent);
+      }
+      .hud-bottom {
+        position: absolute;
+        inset: auto 0 0 0;
+        padding: 12px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        font-size: 12px;
+        color: #d4d4d8;
+      }
+      .mesh-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 500;
+        color: #e4e4e7;
+        flex-shrink: 0;
+      }
+      .mesh-btn:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      /* 21-Angle Matrix Card */
+      .card {
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+      }
+      .matrix-head {
+        padding: 10px 14px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .matrix-head-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 11px;
+        color: var(--muted);
+      }
+      .progress-track {
+        width: 100%;
+        height: 4px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.1);
+        overflow: hidden;
+      }
+      .progress-fill {
+        height: 100%;
+        border-radius: 999px;
+        background: var(--accent);
+        transition: width 0.2s ease;
+      }
+      .matrix-scroll {
+        overflow-x: auto;
+      }
+      .matrix-table {
+        min-width: 540px;
+      }
+      .matrix-row {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        border-top: 1px solid var(--border);
+      }
+      .matrix-row:first-child {
+        border-top: 0;
+      }
+      .matrix-cell {
+        padding: 6px 4px;
+        text-align: center;
+        border-left: 1px solid var(--border);
+        transition: background 0.15s ease;
+      }
+      .matrix-cell:first-child {
+        border-left: 0;
+      }
+      .matrix-cell.is-captured {
+        background: rgba(255, 255, 255, 0.035);
+      }
+      .matrix-cell.is-active {
+        background: rgba(225, 29, 72, 0.22);
+      }
+      .matrix-label {
+        font-size: 10px;
+        font-weight: 500;
+        color: #d4d4d8;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .matrix-count {
+        margin-top: 2px;
+        font-size: 10px;
+        font-weight: 600;
+        color: #52525b;
+      }
+      .matrix-cell.is-captured .matrix-count {
+        color: #fff;
+      }
+      .matrix-cell.is-active .matrix-count {
+        color: var(--accent);
+      }
+
+      /* Alerts & Controls */
+      .alert-warn {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        border-radius: 8px;
+        border: 1px solid rgba(245, 158, 11, 0.5);
+        background: rgba(245, 158, 11, 0.1);
+        padding: 12px 16px;
+        font-size: 12px;
+        color: #fef3c7;
+      }
+      .alert-err {
+        border-radius: 8px;
+        border: 1px solid rgba(225, 29, 72, 0.45);
+        background: rgba(225, 29, 72, 0.12);
+        padding: 12px 16px;
+        font-size: 12px;
+        color: #e4e4e7;
+      }
+      .controls-bar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .controls-btns {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+      }
+
+      /* Right Results Column */
+      .eyebrow {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .hero-title {
+        margin: 0;
+        font-size: 32px;
+        font-weight: 700;
+        line-height: 1.08;
+        color: #fff;
+      }
+      @media (min-width: 640px) {
+        .hero-title {
+          font-size: 36px;
+        }
+      }
+      .hero-copy {
+        margin: 0;
+        font-size: 13px;
+        color: var(--muted);
+        line-height: 1.55;
+      }
+      .score-card {
+        padding: 16px;
+      }
+      .score-head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 16px;
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 12px;
+      }
+      .tier-name {
+        margin-top: 4px;
+        font-size: 24px;
+        font-weight: 600;
+        color: #fff;
+      }
+      .psl-num {
+        font-size: 36px;
+        font-weight: 700;
+        color: #fff;
+        line-height: 1;
+      }
+      .bell-wrap {
+        margin-top: 12px;
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 12px;
+      }
+      .bell-bar {
+        position: relative;
+        height: 8px;
+        width: 100%;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.1);
+      }
+      .bell-fill {
+        position: absolute;
+        inset: 0 auto 0 0;
+        border-radius: 999px;
+        background: linear-gradient(to right, #52525b, #e11d48, #ffffff);
+        transition: width 0.2s ease;
+      }
+      .bell-needle {
+        position: absolute;
+        top: 50%;
+        width: 4px;
+        height: 14px;
+        transform: translate(-50%, -50%);
+        border-radius: 2px;
+        background: #fff;
+        box-shadow: 0 0 6px rgba(0, 0, 0, 0.8);
+      }
+      .bell-ticks {
+        margin-top: 6px;
+        display: flex;
+        justify-content: space-between;
+        font-size: 10px;
+        color: var(--subtle);
+      }
+      .verdict-box {
+        margin-top: 12px;
+      }
+      .verdict-title {
+        font-size: 14px;
+        font-weight: 500;
+        color: #f4f4f5;
+      }
+      .verdict-sub {
+        margin: 4px 0 0;
+        font-size: 12px;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+
+      /* 8 Feature Meters */
+      .metrics-list > .metric-row {
+        padding: 10px 16px;
+        border-top: 1px solid var(--border);
+      }
+      .metrics-list > .metric-row:first-child {
+        border-top: 0;
+      }
+      .metric-top {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 16px;
+      }
+      .metric-label {
+        font-size: 13px;
+        font-weight: 500;
+        color: #f4f4f5;
+      }
+      .metric-vals {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        flex-shrink: 0;
+      }
+      .metric-val-main {
+        font-size: 13px;
+        font-weight: 600;
+        color: #fff;
+      }
+      .metric-val-score {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .metric-bar-track {
+        margin-top: 6px;
+        height: 6px;
+        width: 100%;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.1);
+        overflow: hidden;
+      }
+      .metric-bar-fill {
+        height: 100%;
+        border-radius: 999px;
+        background: var(--accent);
+        transition: width 0.15s ease;
+      }
+      .metric-note {
+        margin: 5px 0 0;
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      /* Lore & History Sections */
+      .section {
+        border-top: 1px solid var(--border);
+        padding: 64px 0;
+      }
+      .section-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 56px;
+      }
+      .sec-title {
+        margin: 6px 0 0;
+        font-size: 30px;
+        font-weight: 700;
+        color: #fff;
+      }
+      .sub-title {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 600;
+        color: #fff;
+      }
+      .grid-4 {
+        display: grid;
+        gap: 20px;
+        grid-template-columns: 1fr;
+      }
+      @media (min-width: 768px) {
+        .grid-4 {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+      @media (min-width: 1024px) {
+        .grid-4 {
+          grid-template-columns: repeat(4, 1fr);
+        }
+      }
+      .grid-3 {
+        display: grid;
+        gap: 16px;
+        grid-template-columns: 1fr;
+      }
+      @media (min-width: 640px) {
+        .grid-3 {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+      @media (min-width: 1024px) {
+        .grid-3 {
+          grid-template-columns: repeat(3, 1fr);
+        }
+      }
+      .pad-card {
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+      .table-wrap {
+        overflow-x: auto;
+      }
+      table {
+        width: 100%;
+        min-width: 680px;
+        border-collapse: collapse;
+        text-align: left;
+        font-size: 13px;
+      }
+      th {
+        padding: 12px 16px;
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--muted);
+        border-bottom: 1px solid var(--border);
+      }
+      td {
+        padding: 14px 16px;
+        border-top: 1px solid var(--border);
+        color: #d4d4d8;
+      }
+      tbody tr:first-child td {
+        border-top: 0;
+      }
+      .log-row {
+        cursor: pointer;
+        transition: background 0.15s ease;
+      }
+      .log-row:hover {
+        background: rgba(255, 255, 255, 0.05);
+      }
+      .log-row.is-active {
+        background: rgba(255, 255, 255, 0.07);
+      }
+      .footer {
+        border-top: 1px solid var(--border);
+        padding: 32px 0;
+      }
+      .footer-inner {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        font-size: 12px;
+        color: var(--subtle);
+      }
+      .hidden {
+        display: none !important;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="container topbar-inner">
+        <a href="#scanner" class="font-display brand">MOGMETER</a>
+        <nav class="nav">
+          <a href="#scanner">Live Scanner</a>
+          <a href="#lore">History &amp; Tiers</a>
+          <a href="#history">Saved Log</a>
+        </nav>
+        <button type="button" id="topPrimaryBtn" class="btn-primary btn-sm">Start Live Scan</button>
+      </div>
+    </header>
+
+    <main class="container">
+      <section id="scanner" class="scanner-grid">
+        <!-- Left 7 cols: Camera Stage + 21-Angle Matrix -->
+        <div class="stack-sm">
+          <div class="camera-stage">
+            <video id="videoEl" class="camera-video hidden" autoplay playsinline muted></video>
+            <img id="snapshotImg" class="snapshot-img hidden" alt="Saved facial scan snapshot" />
+
+            <div id="standbyBox" class="standby-box">
+              <div class="standby-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+              </div>
+              <div>
+                <div class="font-display" style="font-size:24px;font-weight:600;color:#fff;">
+                  Enable Camera for 21-Angle 3D Fusion
+                </div>
+                <p style="max-width:420px;margin:8px auto 0;font-size:14px;color:var(--muted);">
+                  Sweep smoothly across front, 3/4, profile, hard-left/right, up-left/right, and
+                  down-left/right angles. Every zone stays fused into one calibrated PSL score.
+                </p>
+              </div>
+              <button type="button" id="standbyStartBtn" class="btn-primary btn-standby">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+                <span>Enable Live Camera</span>
+              </button>
+            </div>
+
+            <canvas id="overlayCanvas" class="overlay-canvas hidden" aria-hidden="true"></canvas>
+
+            <svg viewBox="0 0 400 400" preserveAspectRatio="none" class="brackets-svg" aria-hidden="true">
+              <path d="M20 46 V20 H46" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="1.5" />
+              <path d="M354 20 H380 V46" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="1.5" />
+              <path d="M20 354 V380 H46" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="1.5" />
+              <path d="M354 380 H380 V354" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="1.5" />
+            </svg>
+
+            <div id="hudTop" class="hud-top hidden">
+              <div style="display:flex;align-items:center;gap:12px;">
+                <div class="radar-box">
+                  <svg width="70" height="34" viewBox="0 0 70 34" aria-hidden="true">
+                    <line x1="5" y1="17" x2="65" y2="17" stroke="rgba(255,255,255,0.18)" stroke-width="1" />
+                    <line x1="35" y1="3" x2="35" y2="31" stroke="rgba(255,255,255,0.18)" stroke-width="1" />
+                    <rect x="25" y="11" width="20" height="12" fill="none" stroke="rgba(255,255,255,0.22)" stroke-width="0.8" />
+                    <circle id="radarDot" cx="35" cy="17" r="3.2" fill="#E11D48" />
+                    <circle id="radarRing" cx="35" cy="17" r="5.5" fill="none" stroke="rgba(225,29,72,0.45)" stroke-width="1" />
+                  </svg>
+                </div>
+                <div>
+                  <div id="poseText" class="font-mono-tabular" style="font-weight:500;color:#f4f4f5;">Center your face in frame</div>
+                  <div id="activeZoneText" class="font-mono-tabular" style="font-size:11px;color:var(--muted);">Scanning pose...</div>
+                </div>
+              </div>
+              <div style="text-align:right;">
+                <div id="hudZones" class="font-mono-tabular" style="font-weight:600;color:var(--accent);">0/21 zones</div>
+                <div id="hudFrames" class="font-mono-tabular" style="font-size:11px;color:#d4d4d8;">Detecting face...</div>
+              </div>
+            </div>
+
+            <div class="hud-bottom-scrim" aria-hidden="true"></div>
+            <div class="hud-bottom">
+              <div style="display:flex;align-items:center;gap:8px;overflow:hidden;white-space:nowrap;">
+                <span id="stageStatusLabel" style="font-weight:500;color:#fff;">Camera Standby</span>
+                <span aria-hidden="true">·</span>
+                <span id="stageLandmarkLabel" class="font-mono-tabular" style="color:var(--muted);">Ready to map</span>
+              </div>
+              <button type="button" id="toggleMeshBtn" class="mesh-btn hidden">
+                <span id="meshBtnIcon"></span>
+                <span>Mesh</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- 21-Angle Matrix -->
+          <div class="card">
+            <div class="matrix-head">
+              <div class="matrix-head-row">
+                <span style="font-weight:500;color:#e4e4e7;">21-Angle Spherical Pose Matrix (7 Yaw × 3 Pitch)</span>
+                <span id="matrixSummary" class="font-mono-tabular" style="color:#d4d4d8;">0/21 zones connected (0%)</span>
+              </div>
+              <div class="progress-track">
+                <div id="matrixProgress" class="progress-fill" style="width:0%;"></div>
+              </div>
+            </div>
+            <div class="matrix-scroll">
+              <div id="poseGrid" class="matrix-table"></div>
+            </div>
+          </div>
+
+          <div id="accessoryAlert" class="alert-warn hidden" role="alert">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-top:2px;flex-shrink:0;"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+            <div>
+              <div style="font-weight:600;color:#fde68a;">Forehead Headwear Detected</div>
+              <p id="accessoryMsg" style="margin:2px 0 0;line-height:1.5;"></p>
+            </div>
+          </div>
+
+          <div id="cameraErrorBox" class="alert-err hidden" role="alert"></div>
+
+          <div class="controls-bar">
+            <span id="controlsHint" style="font-size:12px;color:var(--muted);">
+              All 478-point mapping runs locally in your browser.
+            </span>
+            <div class="controls-btns">
+              <button type="button" id="saveSnapshotBtn" class="btn-primary btn-sm hidden" disabled>Save Snapshot</button>
+              <button type="button" id="resetDataBtn" class="btn-secondary hidden">Reset Data</button>
+              <button type="button" id="stopCameraBtn" class="btn-secondary hidden">Stop Camera</button>
+              <button type="button" id="startCameraBtn" class="btn-primary btn-sm">Start Camera</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right 5 cols: PSL Rating + 8 Feature Meters -->
+        <div class="stack-sm">
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <div class="eyebrow">
+              <span>21-Angle 3D Fusion</span>
+              <span aria-hidden="true">·</span>
+              <span>True 5.3 MTN Bell Curve</span>
+            </div>
+            <h1 class="font-display hero-title">Live Full-Face PSL &amp; Symmetry Analyzer</h1>
+            <p class="hero-copy">
+              21 distinct angles (front, 3/4, profile, hard-left/right, up-left/right, down-left/right)
+              are fused continuously. True average is 5.3 (MTN); deadzones removed for real variance.
+            </p>
+            <div style="padding-top:4px;">
+              <button type="button" id="panelPrimaryBtn" class="btn-primary btn-lg">
+                Enable Camera &amp; Start Live Rating
+              </button>
+            </div>
+          </div>
+
+          <div class="card score-card">
+            <div class="score-head">
+              <div>
+                <div id="scoreSubline" style="font-size:12px;color:var(--muted);">
+                  Population Average = 5.30 MTN
+                </div>
+                <div id="scoreTier" class="font-display tier-name">Awaiting Live Face</div>
+              </div>
+              <div style="text-align:right;">
+                <div style="font-size:12px;color:var(--muted);">Brutal PSL Rating</div>
+                <div class="font-mono-tabular psl-num">
+                  <span id="scoreVal">—</span><span style="font-size:18px;font-weight:400;color:var(--subtle);"> / 10</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="bell-wrap">
+              <div class="bell-bar">
+                <div id="bellFill" class="bell-fill" style="width:0%;"></div>
+                <div id="bellNeedle" class="bell-needle hidden" style="left:42%;"></div>
+              </div>
+              <div class="font-mono-tabular bell-ticks">
+                <span>Sub-5 (&lt;4.9)</span>
+                <span style="color:#d4d4d8;">Avg MTN (5.3)</span>
+                <span>HTN (5.8+)</span>
+                <span>Chadlite (6.8+)</span>
+                <span>Chad (7.8+)</span>
+              </div>
+            </div>
+
+            <div class="verdict-box">
+              <div id="verdictHeadline" class="verdict-title">
+                Look into the camera and slowly turn through angles—your connected score updates live.
+              </div>
+              <p id="verdictAdvice" class="verdict-sub">
+                Everyday faces average ~5.3 (MTN). Only genuine sharp bone structure &amp; tight harmony reach 7.0+.
+              </p>
+            </div>
+          </div>
+
+          <div id="metricsList" class="card metrics-list"></div>
+        </div>
+      </section>
+
+      <!-- Real Internet History & Tiers -->
+      <section id="lore" class="section section-stack">
+        <div style="max-width:672px;">
+          <div style="font-size:12px;color:var(--muted);">
+            Real Internet History · Forums (2014–2019) to TikTok (2020–2024)
+          </div>
+          <h2 class="font-display sec-title">
+            The Real History of Sigma, Looksmaxxing, Chad &amp; the Blackpill
+          </h2>
+          <p style="margin:8px 0 0;font-size:14px;color:var(--muted);line-height:1.6;">
+            Terms like PSL, canthal tilt, mogging, and the blackpill did not start on TikTok—they
+            originated on mid-2010s bodybuilding and lookism forums years before colliding with
+            2020–2022 Sigma edits and 2023–2024 mewing memes.
+          </p>
+        </div>
+
+        <div id="timelineGrid" class="grid-4"></div>
+
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div>
+            <h3 class="font-display sub-title">
+              How the Terms Evolved Across Forums, Sigma TikTok &amp; Looksmaxxing
+            </h3>
+            <p style="margin:4px 0 0;font-size:12px;color:var(--muted);">
+              Tracing where each concept started vs. how 2020–2024 TikTok turned it into viral slang.
+            </p>
+          </div>
+          <div class="card table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Concept</th>
+                  <th>2014–2019 Forum Roots</th>
+                  <th>2020–2022 TikTok Sigma</th>
+                  <th>2023–2024 TikTok Looksmaxxing</th>
+                </tr>
+              </thead>
+              <tbody id="eraTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div>
+            <h3 class="font-display sub-title">The Real PSL Tier Bell Curve</h3>
+            <p style="margin:4px 0 0;font-size:12px;color:var(--muted);">
+              On an honest PSL scale, ~5.3 is genuinely average—not a failing grade. High 7s and 8s are rare.
+            </p>
+          </div>
+          <div id="pslTierGrid" class="grid-3"></div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <h3 class="font-display sub-title">Slang &amp; Biometric Glossary</h3>
+          <div id="glossaryGrid" class="grid-3"></div>
+        </div>
+      </section>
+
+      <!-- Saved History Section -->
+      <section id="history" class="section">
+        <div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px;">
+          <div>
+            <div style="font-size:12px;color:var(--muted);">Saved Snapshots · Stored Locally</div>
+            <h2 class="font-display sec-title">Saved PSL Scan Log</h2>
+          </div>
+          <button type="button" id="clearHistoryBtn" class="btn-secondary hidden">Clear History</button>
+        </div>
+
+        <div id="historyEmpty" class="card" style="margin-top:24px;padding:32px;text-align:center;">
+          <p style="margin:0;font-size:14px;color:var(--muted);">
+            No snapshots saved yet. While the live scanner is running, click &ldquo;Save Snapshot&rdquo;
+            to bookmark any live PSL reading.
+          </p>
+        </div>
+
+        <div id="historyTableCard" class="card table-wrap hidden" style="margin-top:24px;">
+          <table>
+            <thead>
+              <tr>
+                <th>Subject</th>
+                <th>Tier</th>
+                <th style="text-align:right;">Jawline</th>
+                <th style="text-align:right;">Symmetry</th>
+                <th style="text-align:right;">Eyes</th>
+                <th style="text-align:right;">PSL Score</th>
+              </tr>
+            </thead>
+            <tbody id="historyBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="container footer-inner">
+        <span>MogMeter · Single-file 21-angle 478-point 3D facial fusion &amp; spline jawline mapping</span>
+        <span>Strict PSL Calibration · 2014–2024 Cultural Archive</span>
+      </div>
+    </footer>
+
+    <script type="module">
+      // =======================================================================
+      // 1. Benign MediaPipe TFLite C++ stderr filter + WebGL2 pre-check
+      // =======================================================================
+      const BENIGN_MEDIAPIPE_LOG =
+        /(?:TensorFlow Lite XNNPACK delegate|Feedback manager requires a model with a single signature|InitGoogleLogging|OpenGL error checking)/i;
+
+      (function installMediaPipeLogFilter() {
+        const shouldSuppress = (args) =>
+          BENIGN_MEDIAPIPE_LOG.test(args.map((a) => (typeof a === 'string' ? a : '')).join(' ').trim());
+        const origError = console.error.bind(console);
+        console.error = (...args) => {
+          if (!shouldSuppress(args)) origError(...args);
+        };
+        const origWarn = console.warn.bind(console);
+        console.warn = (...args) => {
+          if (!shouldSuppress(args)) origWarn(...args);
+        };
+      })();
+
+      function supportsWebGL2() {
+        try {
+          return Boolean(document.createElement('canvas').getContext('webgl2'));
+        } catch {
+          return false;
+        }
+      }
+
+      let visionModule = null;
+      let landmarkerPromise = null;
+
+      async function getVideoLandmarker() {
+        if (!landmarkerPromise) {
+          landmarkerPromise = (async () => {
+            let localAvailable = false;
+            try {
+              const head = await fetch('/mediapipe/face_landmarker.task', { method: 'HEAD' });
+              localAvailable = head.ok;
+            } catch {
+              localAvailable = false;
+            }
+
+            if (localAvailable) {
+              try {
+                visionModule = await import(/* @vite-ignore */ '/mediapipe/vision_bundle.mjs');
+              } catch {
+                visionModule = await import(
+                  /* @vite-ignore */ 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.21/+esm'
+                );
+              }
+            } else {
+              visionModule = await import(
+                /* @vite-ignore */ 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.21/+esm'
+              );
+            }
+
+            const { FaceLandmarker, FilesetResolver } = visionModule;
+            const wasmBase = localAvailable
+              ? '/mediapipe/wasm'
+              : 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.21/wasm';
+            const modelPath = localAvailable
+              ? '/mediapipe/face_landmarker.task'
+              : 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task';
+
+            const vision = await FilesetResolver.forVisionTasks(wasmBase);
+            const opts = (delegate) => ({
+              baseOptions: { modelAssetPath: modelPath, delegate },
+              runningMode: 'VIDEO',
+              numFaces: 1,
+              minFaceDetectionConfidence: 0.38,
+              minFacePresenceConfidence: 0.38,
+              minTrackingConfidence: 0.38,
+              outputFaceBlendshapes: false,
+              outputFacialTransformationMatrixes: false,
+            });
+
+            if (supportsWebGL2()) {
+              try {
+                return await FaceLandmarker.createFromOptions(vision, opts('GPU'));
+              } catch {
+                // Fallback to CPU
+              }
+            }
+            return await FaceLandmarker.createFromOptions(vision, opts('CPU'));
+          })();
+        }
+        return landmarkerPromise;
+      }
+
+      // =======================================================================
+      // 2. Lore, PSL Bell Curve & Glossary Data (Real 2014-2024 History)
+      // =======================================================================
+      const TIMELINE_ERAS = [
+        {
+          period: '2014 – 2019',
+          title: 'Forum Origins: Lookism, PSL & The Blackpill',
+          summary:
+            'Before TikTok existed at scale, terms like PSL ("Pretty Scale Level"), canthal tilt, gonial angle, mogging, and "the blackpill" (the deterministic belief that genetics and bone structure dictate attractiveness) grew out of niche bodybuilding, PUA, and Lookism.net / Looksmax.org forums. Ernest Khalimov’s 2017 "Sleek’N’Tears" photos later became the iconic Gigachad meme.',
+          keyTerms: 'PSL Scale · Mogging · Canthal Tilt · Gigachad · Blackpill',
+        },
+        {
+          period: '2020 – 2022',
+          title: 'TikTok Sigma Grindset & Patrick Bateman Edits',
+          summary:
+            'Mainstream TikTok embraced "Sigma male" irony and hyper-disciplined self-improvement edits set to slowed phonk music ("Metamorphosis", "Sahara") featuring Christian Bale in American Psycho, Thomas Shelby in Peaky Blinders, and Ryan Gosling. It popularized "monk mode," 4 AM cold showers, and stoic silence.',
+          keyTerms: 'Sigma · Monk Mode · Bateman Nod · Phonk · Winter Arc',
+        },
+        {
+          period: '2023 – 2024',
+          title: 'Mainstream TikTok Looksmaxxing & "Bye Bye"',
+          summary:
+            'Old forum terminology jumped onto mainstream FYP feeds. Creators popularized Dr. Mike Mew’s tongue posture ("mewing"), the viral "Bye Bye" audio trend, chewing hard mastic or Falim gum, ice-rolling to reduce facial bloat, mouth taping, and rating faces by PSL tiers from Sub-5 to Chad.',
+          keyTerms: 'Mewing · Bye Bye · Softmaxxing · Hardmaxxing · Hunter Eyes',
+        },
+        {
+          period: '2024 Crossover',
+          title: 'Where Sigma, Looksmaxxing & Blackpill Blurred',
+          summary:
+            'As TikTok algorithms mixed gym-bro Sigma edits with facial-rating trends, casual viewers frequently confused "looksmaxxing" (actionable skincare, haircut, gym, grooming = softmaxxing) with "blackpill" determinism—using them interchangeably in comment sections.',
+          keyTerms: 'Softmaxxing vs. Fatalism · Bone Structure · Aura Check',
+        },
+      ];
+
+      const ERA_TRANSLATIONS = [
+        {
+          concept: 'Lowering facial fat & bloating',
+          forumOrigins: 'Leanmaxxing / Sodium-Potassium Balance',
+          sigmaWave: 'Monk Mode Clean Diet',
+          tiktokLooksmaxxing: 'Ice Rolling + Electrolyte Flush',
+        },
+        {
+          concept: 'Jawline & neck posture',
+          forumOrigins: 'Mandible Projection Focus',
+          sigmaWave: 'Stoic Chin-Up Posture',
+          tiktokLooksmaxxing: 'Mewing ("Bye Bye") + Mouth Tape',
+        },
+        {
+          concept: 'Eye area & brow presence',
+          forumOrigins: 'Positive Canthal Tilt / Low UEE',
+          sigmaWave: 'Patrick Bateman Mirror Stare',
+          tiktokLooksmaxxing: 'Hunter Eyes vs. Prey Eyes Check',
+        },
+        {
+          concept: 'Attractiveness philosophy',
+          forumOrigins: 'Blackpill (Genetic Determinism)',
+          sigmaWave: 'Sigma Self-Mastery Grindset',
+          tiktokLooksmaxxing: 'Softmaxxing & Routine Optimization',
+        },
+      ];
+
+      const PSL_TIER_GUIDE = [
+        {
+          tier: 'Sub-5',
+          range: '1.0 – 4.7',
+          percentile: 'Bottom 35%',
+          vibeNote:
+            'Recessed chin or high facial bloat, weak gonial definition, or noticeable asymmetry. Gym, cut body fat, and fix haircut/skin first.',
+        },
+        {
+          tier: 'MTN (Mid-Tier Normie)',
+          range: '4.8 – 5.7',
+          percentile: 'Average (~5.3)',
+          vibeNote:
+            'Normal everyday face. Nothing glaringly recessed, nothing striking. Most regular guys land right here before leaning down.',
+        },
+        {
+          tier: 'HTN (High-Tier Normie)',
+          range: '5.8 – 6.7',
+          percentile: 'Top 15%',
+          vibeNote:
+            'Clean jawline, balanced facial thirds, and good grooming. Consistently gets noticed in real life when lean.',
+        },
+        {
+          tier: 'Chadlite',
+          range: '6.8 – 7.7',
+          percentile: 'Top 2%',
+          vibeNote:
+            'Strong cheekbones, sharp 120° mandible, positive canthal tilt, and high symmetry. Mogs almost every casual group photo.',
+        },
+        {
+          tier: 'Chad / Gigachad',
+          range: '7.8 – 8.7',
+          percentile: 'Top 0.1%',
+          vibeNote:
+            'Editorial model-tier bone structure, hollow cheeks, and elite forward maxilla/chin projection.',
+        },
+        {
+          tier: 'True Adam',
+          range: '8.8 – 10.0',
+          percentile: 'Statistical Unicorn',
+          vibeNote:
+            'Virtually unattainable on a strict PSL scale—near-perfect 1.618 Golden Ratio symmetry across all 21 angles.',
+        },
+      ];
+
+      const SLANG_GLOSSARY = [
+        {
+          term: 'Mewing & "Bye Bye"',
+          originNote: 'Dr. Mike Mew · 2023–2024 TikTok Trend',
+          definition:
+            'Resting your entire tongue against the roof of your mouth to support jawline posture. Became a massive meme when TikTokers traced their jaw to the "Bye Bye" audio.',
+        },
+        {
+          term: 'Mogging / Mogged',
+          originNote: 'Fitness & Lookism Forum Slang',
+          definition:
+            'Short for AMOG ("Alpha Male of the Group"). Out-classing someone nearby in height, frame, jawline, or facial symmetry.',
+        },
+        {
+          term: 'PSL (Pretty Scale Level)',
+          originNote: 'Forum Rating Standard (1–10)',
+          definition:
+            'A strict 1-to-10 facial harmony scale where ~5.3 is genuinely average (MTN), 6.0+ is attractive (HTN), 7.0+ is Chadlite, and 8.0+ is extreme rarity (Chad/Gigachad).',
+        },
+        {
+          term: 'Canthal Tilt & Hunter Eyes',
+          originNote: 'Orbital & Eye-Area Metric',
+          definition:
+            'The angle between inner and outer corners of the eye. Positive tilt with minimal upper-eyelid exposure creates "hunter eyes," while downward slope is dubbed "prey eyes."',
+        },
+        {
+          term: 'Gonial Angle',
+          originNote: 'Craniofacial Jawline Geometry',
+          definition:
+            'The angle formed at the corner of the mandible between the ascending ramus and lower jaw body. Around 118° to 122° with low body fat gives sharp lower-third definition.',
+        },
+        {
+          term: 'Softmaxxing vs. Hardmaxxing',
+          originNote: 'Looksmaxxing Categories',
+          definition:
+            'Softmaxxing covers non-invasive habits (dropping body fat, skincare, haircut, eyebrows, debloating, gym). Hardmaxxing refers to invasive cosmetic or orthodontic procedures.',
+        },
+        {
+          term: 'Sigma Grindset / Monk Mode',
+          originNote: '2020–2022 TikTok Culture',
+          definition:
+            'Going off-grid for intense self-improvement—early wakeups, lifting, clean eating, and cutting distractions—often parodied with Patrick Bateman or Thomas Shelby edits.',
+        },
+        {
+          term: 'Blackpill vs. Looksmaxxing',
+          originNote: 'Common TikTok Mix-Up',
+          definition:
+            'Looksmaxxing is actively optimizing what you can control (fitness, grooming, posture). Blackpill is the fatalistic forum ideology claiming facial bone genetics determine everything.',
+        },
+        {
+          term: 'Chad / Chadlite / Sub-5',
+          originNote: 'PSL Tier Classifications',
+          definition:
+            'Tier labels mapping where a face lands on the bell curve: Sub-5 (below average), MTN (average), HTN (above average), Chadlite (top ~2%), and Chad / Gigachad (top 0.1%).',
+        },
+      ];
+
+      // =======================================================================
+      // 3. Geometric & Pixel Biometric Engine
+      // =======================================================================
+      const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+      const round1 = (v) => Math.round(v * 10) / 10;
+      const round2 = (v) => Math.round(v * 100) / 100;
+
+      function dist2D(a, b, aspect) {
+        return Math.hypot((a.x - b.x) * aspect, a.y - b.y);
+      }
+
+      function angle2D(a, vertex, b, aspect) {
+        const v1x = (a.x - vertex.x) * aspect;
+        const v1y = a.y - vertex.y;
+        const v2x = (b.x - vertex.x) * aspect;
+        const v2y = b.y - vertex.y;
+        const mag1 = Math.hypot(v1x, v1y);
+        const mag2 = Math.hypot(v2x, v2y);
+        if (!mag1 || !mag2) return 125;
+        return (Math.acos(clamp((v1x * v2x + v1y * v2y) / (mag1 * mag2), -1, 1)) * 180) / Math.PI;
+      }
+
+      function angle3D(a, vertex, b, aspect) {
+        const v1x = (a.x - vertex.x) * aspect;
+        const v1y = a.y - vertex.y;
+        const v1z = (a.z - vertex.z) * aspect;
+        const v2x = (b.x - vertex.x) * aspect;
+        const v2y = b.y - vertex.y;
+        const v2z = (b.z - vertex.z) * aspect;
+        const mag1 = Math.hypot(v1x, v1y, v1z);
+        const mag2 = Math.hypot(v2x, v2y, v2z);
+        if (!mag1 || !mag2) return 125;
+        return (Math.acos(clamp((v1x * v2x + v1y * v2y + v1z * v2z) / (mag1 * mag2), -1, 1)) * 180) / Math.PI;
+      }
+
+      function smoothLandmarks(prev, curr) {
+        if (!prev || prev.length !== curr.length) return curr;
+        const noseDelta = Math.hypot(curr[1].x - prev[1].x, curr[1].y - prev[1].y);
+        const alpha = noseDelta > 0.014 ? 0.74 : 0.45;
+        const inv = 1 - alpha;
+        return curr.map((pt, i) => ({
+          x: prev[i].x * inv + pt.x * alpha,
+          y: prev[i].y * inv + pt.y * alpha,
+          z: prev[i].z * inv + pt.z * alpha,
+          visibility: pt.visibility,
+        }));
+      }
+
+      function analyzeFramePixels(canvas, landmarks) {
+        const w = canvas.width;
+        const h = canvas.height;
+        const ctx = canvas.getContext('2d');
+        const fallback = {
+          foreheadObstructed: false,
+          obstructionReason: null,
+          eyebrowDensityScore: 5.4,
+          hairlineScore: 5.6,
+        };
+        if (!ctx || !w || !h) return fallback;
+        let imgData;
+        try {
+          imgData = ctx.getImageData(0, 0, w, h);
+        } catch {
+          return fallback;
+        }
+        const data = imgData.data;
+
+        const sampleStats = (cxNorm, cyNorm, rxNorm, ryNorm) => {
+          const x0 = clamp(Math.floor((cxNorm - rxNorm) * w), 0, w - 1);
+          const x1 = clamp(Math.ceil((cxNorm + rxNorm) * w), 1, w);
+          const y0 = clamp(Math.floor((cyNorm - ryNorm) * h), 0, h - 1);
+          const y1 = clamp(Math.ceil((cyNorm + ryNorm) * h), 1, h);
+          let rSum = 0, gSum = 0, bSum = 0, lumSum = 0, count = 0;
+          for (let y = y0; y < y1; y += 2) {
+            for (let x = x0; x < x1; x += 2) {
+              const idx = (y * w + x) * 4;
+              const r = data[idx], g = data[idx + 1], b = data[idx + 2];
+              rSum += r;
+              gSum += g;
+              bSum += b;
+              lumSum += 0.299 * r + 0.587 * g + 0.114 * b;
+              count++;
+            }
+          }
+          if (!count) return { r: 128, g: 128, b: 128, lum: 128 };
+          return { r: rSum / count, g: gSum / count, b: bSum / count, lum: lumSum / count };
+        };
+
+        const faceW = Math.abs(landmarks[454].x - landmarks[234].x) || 0.3;
+        const faceH = Math.abs(landmarks[152].y - landmarks[10].y) || 0.45;
+        const lc = sampleStats(landmarks[116].x, landmarks[116].y, faceW * 0.06, faceH * 0.04);
+        const rc = sampleStats(landmarks[345].x, landmarks[345].y, faceW * 0.06, faceH * 0.04);
+        const skinR = (lc.r + rc.r) / 2;
+        const skinG = (lc.g + rc.g) / 2;
+        const skinB = (lc.b + rc.b) / 2;
+        const colorDist = (s) => Math.hypot(s.r - skinR, s.g - skinG, s.b - skinB);
+
+        const upperForehead = sampleStats(
+          landmarks[10].x,
+          Math.max(0.02, landmarks[10].y - faceH * 0.02),
+          faceW * 0.16,
+          faceH * 0.035
+        );
+        const midForehead = sampleStats(
+          landmarks[9].x,
+          (landmarks[9].y + landmarks[10].y) / 2,
+          faceW * 0.14,
+          faceH * 0.035
+        );
+        const foreheadObstructed =
+          colorDist(upperForehead) > 92 &&
+          upperForehead.lum < midForehead.lum * 0.42 &&
+          midForehead.lum > 55;
+
+        const obstructionReason = foreheadObstructed
+          ? 'Hat, beanie, or heavy headwear appears to cover your forehead. Take off hats or caps for an accurate hairline reading.'
+          : null;
+
+        const lBrow = sampleStats(landmarks[105].x, landmarks[105].y, faceW * 0.08, faceH * 0.018);
+        const rBrow = sampleStats(landmarks[334].x, landmarks[334].y, faceW * 0.08, faceH * 0.018);
+        const browContrast = clamp(
+          (midForehead.lum - (lBrow.lum + rBrow.lum) / 2) / Math.max(35, midForehead.lum),
+          0,
+          0.75
+        );
+        const eyebrowDensityScore = clamp(Number((3.6 + browContrast * 8.6).toFixed(2)), 2.8, 9.2);
+
+        const findHairDrop = (xNorm, startY) => {
+          let steps = 0;
+          for (let s = 1; s <= 12; s++) {
+            const yTest = startY - s * faceH * 0.024;
+            if (yTest <= 0.01) break;
+            const sample = sampleStats(xNorm, yTest, faceW * 0.04, faceH * 0.012);
+            if (sample.lum < midForehead.lum * 0.62 || colorDist(sample) > 64) return s;
+            steps = s;
+          }
+          return steps;
+        };
+
+        const centerHairSteps = findHairDrop(landmarks[10].x, landmarks[10].y);
+        const leftTempleSteps = findHairDrop(landmarks[54].x, landmarks[54].y);
+        const rightTempleSteps = findHairDrop(landmarks[284].x, landmarks[284].y);
+        const avgTempleExtra = (leftTempleSteps + rightTempleSteps) / 2 - centerHairSteps;
+        const templeRecessionDiff = clamp(Number((avgTempleExtra * 0.025).toFixed(2)), -0.1, 0.25);
+        const hairlineHeightPenalty = Math.max(0, centerHairSteps - 5) * 0.42;
+        const recessionPenalty = Math.max(0, templeRecessionDiff - 0.02) * 16;
+        const hairlineScore = clamp(
+          Number((7.4 - hairlineHeightPenalty - recessionPenalty).toFixed(2)),
+          2.6,
+          9.1
+        );
+
+        return { foreheadObstructed, obstructionReason, eyebrowDensityScore, hairlineScore };
+      }
+
+      function extractLiveFrameMetrics(landmarks, sourceWidth, sourceHeight, mirrored = true) {
+        const aspect = sourceWidth > 0 && sourceHeight > 0 ? sourceWidth / sourceHeight : 1.33;
+        const lms = mirrored ? landmarks.map((lm) => ({ ...lm, x: 1 - lm.x })) : landmarks;
+
+        const faceSpanX = Math.abs(lms[454].x - lms[234].x) || 0.2;
+        const midX = (lms[234].x + lms[454].x) / 2;
+        const yawDeg = clamp(((lms[1].x - midX) / faceSpanX) * 92, -65, 65);
+
+        const faceHeight = Math.abs(lms[152].y - lms[10].y) || 0.4;
+        const cheekMidY = (lms[234].y + lms[454].y) / 2;
+        const pitchDeg = clamp(((cheekMidY - lms[195].y) / faceHeight) * 148, -45, 45);
+        const faceBoxScale = clamp(faceHeight, 0.12, 0.95);
+
+        const leftInner = lms[133], leftOuter = lms[33];
+        const rightInner = lms[362], rightOuter = lms[263];
+        const sLeft = leftInner.x <= rightInner.x ? leftInner : rightInner;
+        const sRight = leftInner.x <= rightInner.x ? rightInner : leftInner;
+        const headRollRad = Math.atan2(sRight.y - sLeft.y, Math.max(0.01, (sRight.x - sLeft.x) * aspect));
+        const rollDeg = clamp((headRollRad * 180) / Math.PI, -45, 45);
+        const cosRoll = Math.cos(headRollRad);
+        const sinRoll = Math.sin(headRollRad);
+
+        const tiltRad = (inner, outer) => {
+          const dx = (outer.x - inner.x) * aspect;
+          const dy = outer.y - inner.y;
+          const upY = -(dy * cosRoll - dx * sinRoll);
+          const outX = Math.max(0.008, Math.abs(dx * cosRoll + dy * sinRoll));
+          return Math.atan2(upY, outX);
+        };
+        const canthalTiltDeg = clamp(
+          Number(((((tiltRad(leftInner, leftOuter) + tiltRad(rightInner, rightOuter)) / 2) * 180) / Math.PI).toFixed(2)),
+          -7.5,
+          9.5
+        );
+
+        const lEyeW = dist2D(leftOuter, leftInner, aspect) || 0.05;
+        const lEyeH = dist2D(lms[159], lms[145], aspect) || 0.016;
+        const rEyeW = dist2D(rightOuter, rightInner, aspect) || 0.05;
+        const rEyeH = dist2D(lms[386], lms[374], aspect) || 0.016;
+        const eyeApertureRatio = clamp(Number((((lEyeW / lEyeH) + (rEyeW / rEyeH)) / 2).toFixed(2)), 1.4, 5.4);
+        const isBlinking = eyeApertureRatio > 4.9 || lEyeH < 0.0045 || rEyeH < 0.0045;
+
+        const intercanthal = dist2D(leftInner, rightInner, aspect) || 0.07;
+        const eyeSpacingRatio = clamp(Number((intercanthal / ((lEyeW + rEyeW) / 2 || 0.05)).toFixed(2)), 0.72, 1.45);
+
+        const lBrowGap = dist2D(lms[105], lms[159], aspect) / lEyeW;
+        const rBrowGap = dist2D(lms[334], lms[386], aspect) / rEyeW;
+        const eyebrowGapRatio = clamp(Number(((lBrowGap + rBrowGap) / 2).toFixed(2)), 0.25, 1.15);
+
+        const browZ = (lms[105].z + lms[334].z + lms[9].z) / 3;
+        const eyeZ = (lms[159].z + lms[386].z) / 2;
+        const browRidgeDepthScore = clamp(Number((5.2 + (eyeZ - browZ) * 58).toFixed(2)), 2.8, 9.3);
+
+        const alarWidth = dist2D(lms[129], lms[358], aspect) || 0.07;
+        const noseWidthRatio = clamp(Number((alarWidth / intercanthal).toFixed(2)), 0.72, 1.5);
+
+        const nTop = lms[168], nTip = lms[1];
+        const nLen = dist2D(nTop, nTip, aspect) || 0.12;
+        const nDx = (nTip.x - nTop.x) * aspect, nDy = nTip.y - nTop.y;
+        const nNorm = Math.hypot(nDx, nDy) || 1;
+        let noseDev = 0;
+        for (const p of [lms[6], lms[197], lms[5]]) {
+          noseDev += Math.abs(((p.x - nTop.x) * aspect * nDy - (p.y - nTop.y) * nDx) / nNorm) / nLen;
+        }
+        const noseStraightnessScore = clamp(Number((8.4 - (noseDev / 3) * 78).toFixed(2)), 2.8, 9.3);
+        const dorsalAngle = angle2D(lms[168], lms[197], lms[1], aspect);
+        const noseProfileStraightness = clamp(Number((8.3 - Math.abs(174.5 - dorsalAngle) * 0.34).toFixed(2)), 2.8, 9.3);
+
+        const mouthW = dist2D(lms[61], lms[291], aspect) || 0.1;
+        const mouthWidthRatio = clamp(Number((mouthW / alarWidth).toFixed(2)), 1.02, 2.0);
+        const upperLipH = dist2D(lms[0], lms[13], aspect) || 0.012;
+        const lowerLipH = dist2D(lms[14], lms[17], aspect) || 0.016;
+        const lipBalanceRatio = clamp(Number((lowerLipH / upperLipH).toFixed(2)), 0.65, 2.6);
+        const mouthTiltDiff = Math.abs(lms[61].y - lms[291].y) / (mouthW || 0.1);
+        const mouthSymmetryScore = clamp(Number((8.2 - mouthTiltDiff * 36).toFixed(2)), 3.0, 9.2);
+
+        const philtrumRatio = clamp(
+          Number(((dist2D(lms[2], lms[0], aspect) || 0.03) / (dist2D(lms[17], lms[152], aspect) || 0.065)).toFixed(2)),
+          0.24,
+          0.9
+        );
+
+        const left3D = angle3D(lms[234], lms[58], lms[152], aspect);
+        const right3D = angle3D(lms[454], lms[288], lms[152], aspect);
+        const left2D = angle2D(lms[234], lms[58], lms[152], aspect);
+        const right2D = angle2D(lms[454], lms[288], lms[152], aspect);
+        const absYaw = Math.abs(yawDeg);
+        const sideBlend = absYaw > 14 ? clamp((absYaw - 14) / 20, 0, 0.78) : 0;
+        const leftFacing = lms[58].z < lms[288].z;
+
+        const leftGonialDeg = clamp(
+          Number((leftFacing ? left3D * (1 - sideBlend) + left2D * sideBlend : left3D).toFixed(1)),
+          106.0,
+          146.0
+        );
+        const rightGonialDeg = clamp(
+          Number((!leftFacing ? right3D * (1 - sideBlend) + right2D * sideBlend : right3D).toFixed(1)),
+          106.0,
+          146.0
+        );
+        const leftWeight = lms[58].z < lms[288].z - 0.02 ? 0.8 : lms[288].z < lms[58].z - 0.02 ? 0.2 : 0.5;
+        const gonialAngleDeg = Number((leftGonialDeg * leftWeight + rightGonialDeg * (1 - leftWeight)).toFixed(1));
+        const chinAngleDeg = clamp(Number(angle3D(lms[58], lms[152], lms[288], aspect).toFixed(1)), 62.0, 118.0);
+
+        const proj3D = angle3D(lms[168], lms[2], lms[152], aspect);
+        const proj2D = angle2D(lms[168], lms[2], lms[152], aspect);
+        const chinProjectionDeg = clamp(Number((proj3D * (1 - sideBlend) + proj2D * sideBlend).toFixed(1)), 142.0, 179.0);
+
+        const topMid = lms[168], botMid = lms[152];
+        const midLen = dist2D(topMid, botMid, aspect) || 0.4;
+        const pairs = [[33, 263], [133, 362], [70, 300], [234, 454], [58, 288], [61, 291], [129, 358]];
+        let asym = 0;
+        const lineDx = (botMid.x - topMid.x) * aspect, lineDy = botMid.y - topMid.y;
+        const lineNorm = Math.hypot(lineDx, lineDy) || 1;
+        for (const [li, ri] of pairs) {
+          const lp = lms[li], rp = lms[ri];
+          const ld = Math.abs(((lp.x - topMid.x) * aspect * lineDy - (lp.y - topMid.y) * lineDx) / lineNorm);
+          const rd = Math.abs(((rp.x - topMid.x) * aspect * lineDy - (rp.y - topMid.y) * lineDx) / lineNorm);
+          const ly = ((lp.x - topMid.x) * aspect * lineDx + (lp.y - topMid.y) * lineDy) / lineNorm;
+          const ry = ((rp.x - topMid.x) * aspect * lineDx + (rp.y - topMid.y) * lineDy) / lineNorm;
+          asym += (Math.abs(ld - rd) / midLen) * 0.65 + (Math.abs(ly - ry) / midLen) * 0.35;
+        }
+        const symmetryPct = clamp(Number((98.9 - (asym / pairs.length) * 148).toFixed(1)), 68.0, 98.6);
+
+        const uT = (dist2D(lms[10], lms[9], aspect) || 0.13) * 1.12;
+        const mT = dist2D(lms[9], lms[2], aspect) || 0.15;
+        const lT = dist2D(lms[2], lms[152], aspect) || 0.15;
+        const avgT = (uT + mT + lT) / 3;
+        const tVar = (Math.abs(uT - avgT) + Math.abs(mT - avgT) + Math.abs(lT - avgT)) / (3 * avgT);
+        const thirdsBalanceScore = clamp(Number((8.4 - tVar * 22).toFixed(2)), 2.8, 9.2);
+
+        const bizyg = dist2D(lms[234], lms[454], aspect) || 0.3;
+        const bigon = dist2D(lms[58], lms[288], aspect) || 0.23;
+        const jawToCheekRatio = clamp(Number((bigon / bizyg).toFixed(2)), 0.62, 1.02);
+        const faceHFull = dist2D(lms[10], lms[152], aspect) || 0.42;
+        const phiRatio = clamp(Number(((faceHFull * 1.18) / bizyg).toFixed(2)), 1.32, 1.92);
+        const midFaceH = dist2D(lms[9], lms[0], aspect) || 0.16;
+        const fwhr = clamp(Number((bizyg / midFaceH).toFixed(2)), 1.4, 2.35);
+
+        const cheekZ = (lms[118].z + lms[347].z) / 2;
+        const templeZ = (lms[234].z + lms[454].z) / 2;
+        const cheekboneDepthScore = clamp(Number((5.1 + (templeZ - cheekZ) * 28 + (fwhr - 1.85) * 3.0).toFixed(2)), 2.8, 9.4);
+
+        return {
+          symmetryPct, gonialAngleDeg, leftGonialDeg, rightGonialDeg, chinAngleDeg,
+          canthalTiltDeg, eyeApertureRatio, eyeSpacingRatio, eyebrowGapRatio, browRidgeDepthScore,
+          noseWidthRatio, noseStraightnessScore, noseProfileStraightness,
+          mouthWidthRatio, lipBalanceRatio, mouthSymmetryScore, philtrumRatio,
+          jawToCheekRatio, phiRatio, fwhr, cheekboneDepthScore, chinProjectionDeg, thirdsBalanceScore,
+          faceBoxScale, yawDeg, pitchDeg, rollDeg, isBlinking,
+        };
+      }
+
+      // =======================================================================
+      // 4. Canvas Facial Overlay Renderer
+      // =======================================================================
+      const NOSE_BRIDGE_CHAIN = [168, 6, 197, 195, 5, 4, 1, 2];
+      const NOSE_ALAR_CHAIN = [129, 49, 131, 134, 51, 5, 281, 363, 360, 279, 358, 327, 326, 2, 97, 98, 129];
+      const FOREHEAD_HAIRLINE_ARC = [21, 54, 103, 67, 109, 10, 338, 297, 332, 284, 251];
+      const LEFT_RAMUS_JAW = [127, 234, 93, 132, 58, 172, 136, 150, 149, 176, 148, 152];
+      const RIGHT_RAMUS_JAW = [152, 377, 400, 378, 379, 365, 397, 288, 361, 323, 454, 356];
+      const LEFT_CHEEK_ARCH = [116, 123, 50, 205, 58];
+      const RIGHT_CHEEK_ARCH = [345, 352, 280, 425, 288];
+      const LEFT_ORBITAL_ARC = [143, 111, 117, 118, 119, 120, 121];
+      const RIGHT_ORBITAL_ARC = [372, 340, 346, 347, 348, 349, 350];
+
+      function drawSmoothSpline(ctx, pts, color, lineWidth) {
+        if (pts.length < 2) return;
+        ctx.beginPath();
+        ctx.moveTo(pts[0].x, pts[0].y);
+        for (let i = 0; i < pts.length - 1; i++) {
+          const p0 = pts[Math.max(0, i - 1)];
+          const p1 = pts[i];
+          const p2 = pts[i + 1];
+          const p3 = pts[Math.min(pts.length - 1, i + 2)];
+          ctx.bezierCurveTo(
+            p1.x + (p2.x - p0.x) / 6,
+            p1.y + (p2.y - p0.y) / 6,
+            p2.x - (p3.x - p1.x) / 6,
+            p2.y - (p3.y - p1.y) / 6,
+            p2.x,
+            p2.y
+          );
+        }
+        ctx.strokeStyle = color;
+        ctx.lineWidth = lineWidth;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.stroke();
+      }
+
+      function drawGonialAngleArc(ctx, ramus, gonion, menton, radius, degText, labelOffsetX) {
+        const a1 = Math.atan2(ramus.y - gonion.y, ramus.x - gonion.x);
+        const a2 = Math.atan2(menton.y - gonion.y, menton.x - gonion.x);
+        ctx.save();
+        ctx.setLineDash([3, 3]);
+        ctx.strokeStyle = 'rgba(250, 250, 250, 0.55)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(ramus.x, ramus.y);
+        ctx.lineTo(gonion.x, gonion.y);
+        ctx.lineTo(menton.x, menton.y);
+        ctx.stroke();
+        ctx.restore();
+
+        let diff = a2 - a1;
+        while (diff <= -Math.PI) diff += Math.PI * 2;
+        while (diff > Math.PI) diff -= Math.PI * 2;
+        ctx.beginPath();
+        ctx.arc(gonion.x, gonion.y, radius, a1, a1 + diff, diff < 0);
+        ctx.strokeStyle = 'rgba(250, 250, 250, 0.9)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        ctx.font = '600 10px "JetBrains Mono", monospace';
+        ctx.fillStyle = '#FAFAFA';
+        ctx.fillText(degText, gonion.x + labelOffsetX, gonion.y + 15);
+      }
+
+      function drawMappedFaceOverlay(canvas, landmarks, sourceWidth, sourceHeight, mirrored, liveMetrics) {
+        if (!visionModule) return;
+        const { FaceLandmarker } = visionModule;
+        const dpr = window.devicePixelRatio || 1;
+        const boxW = canvas.clientWidth;
+        const boxH = canvas.clientHeight;
+        if (!boxW || !boxH || !sourceWidth || !sourceHeight) return;
+
+        if (canvas.width !== Math.round(boxW * dpr) || canvas.height !== Math.round(boxH * dpr)) {
+          canvas.width = Math.round(boxW * dpr);
+          canvas.height = Math.round(boxH * dpr);
+        }
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        ctx.save();
+        ctx.scale(dpr, dpr);
+        ctx.clearRect(0, 0, boxW, boxH);
+
+        const scale = Math.max(boxW / sourceWidth, boxH / sourceHeight);
+        const drawW = sourceWidth * scale;
+        const drawH = sourceHeight * scale;
+        const offsetX = (boxW - drawW) / 2;
+        const offsetY = (boxH - drawH) / 2;
+
+        const pt = (idx) => {
+          const lm = landmarks[idx];
+          const nx = mirrored ? 1 - lm.x : lm.x;
+          return { x: offsetX + nx * drawW, y: offsetY + lm.y * drawH };
+        };
+
+        const drawConnections = (connections, color, lw) => {
+          ctx.beginPath();
+          for (const c of connections) {
+            if (c.start >= landmarks.length || c.end >= landmarks.length) continue;
+            const a = pt(c.start), b = pt(c.end);
+            ctx.moveTo(a.x, a.y);
+            ctx.lineTo(b.x, b.y);
+          }
+          ctx.strokeStyle = color;
+          ctx.lineWidth = lw;
+          ctx.lineCap = 'round';
+          ctx.stroke();
+        };
+
+        const drawChain = (indices, color, lw) => {
+          if (indices.length < 2) return;
+          ctx.beginPath();
+          const s = pt(indices[0]);
+          ctx.moveTo(s.x, s.y);
+          for (let i = 1; i < indices.length; i++) {
+            const p = pt(indices[i]);
+            ctx.lineTo(p.x, p.y);
+          }
+          ctx.strokeStyle = color;
+          ctx.lineWidth = lw;
+          ctx.lineJoin = 'round';
+          ctx.stroke();
+        };
+
+        drawConnections(FaceLandmarker.FACE_LANDMARKS_TESSELATION, 'rgba(244, 244, 245, 0.13)', 0.65);
+
+        const top = pt(10), brow = pt(9), noseBase = pt(2), chin = pt(152);
+        const leftCheek = pt(234), rightCheek = pt(454);
+        const cheekSpan = Math.abs(rightCheek.x - leftCheek.x);
+        const minX = Math.min(leftCheek.x, rightCheek.x);
+        const maxX = Math.max(leftCheek.x, rightCheek.x);
+
+        ctx.save();
+        ctx.setLineDash([4, 4]);
+        ctx.strokeStyle = 'rgba(244, 244, 245, 0.42)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(top.x, top.y - 16);
+        ctx.lineTo(chin.x, chin.y + 12);
+        ctx.moveTo(leftCheek.x, leftCheek.y);
+        ctx.lineTo(rightCheek.x, rightCheek.y);
+        for (const ref of [top, brow, noseBase, chin]) {
+          ctx.moveTo(minX - cheekSpan * 0.09, ref.y);
+          ctx.lineTo(minX - cheekSpan * 0.02, ref.y);
+          ctx.moveTo(maxX + cheekSpan * 0.02, ref.y);
+          ctx.lineTo(maxX + cheekSpan * 0.09, ref.y);
+        }
+        ctx.stroke();
+
+        const railX = minX - cheekSpan * 0.09;
+        ctx.setLineDash([]);
+        ctx.strokeStyle = 'rgba(225, 29, 72, 0.55)';
+        ctx.beginPath();
+        ctx.moveTo(railX, top.y);
+        ctx.lineTo(railX, chin.y);
+        ctx.stroke();
+
+        const uH = Math.abs(brow.y - top.y) * 1.12;
+        const mH = Math.abs(noseBase.y - brow.y);
+        const lH = Math.abs(chin.y - noseBase.y);
+        const totalH = uH + mH + lH || 1;
+        ctx.font = '600 9px "JetBrains Mono", monospace';
+        ctx.fillStyle = 'rgba(244, 244, 245, 0.72)';
+        ctx.fillText(`${Math.round((uH / totalH) * 100)}%`, railX - 28, (top.y + brow.y) / 2);
+        ctx.fillText(`${Math.round((mH / totalH) * 100)}%`, railX - 28, (brow.y + noseBase.y) / 2);
+        ctx.fillText(`${Math.round((lH / totalH) * 100)}%`, railX - 28, (noseBase.y + chin.y) / 2);
+        ctx.restore();
+
+        drawSmoothSpline(ctx, LEFT_CHEEK_ARCH.map(pt), 'rgba(244, 244, 245, 0.42)', 1.15);
+        drawSmoothSpline(ctx, RIGHT_CHEEK_ARCH.map(pt), 'rgba(244, 244, 245, 0.42)', 1.15);
+        drawSmoothSpline(ctx, LEFT_ORBITAL_ARC.map(pt), 'rgba(225, 29, 72, 0.48)', 1.0);
+        drawSmoothSpline(ctx, RIGHT_ORBITAL_ARC.map(pt), 'rgba(225, 29, 72, 0.48)', 1.0);
+        drawSmoothSpline(ctx, FOREHEAD_HAIRLINE_ARC.map(pt), 'rgba(250, 250, 250, 0.75)', 1.35);
+
+        drawConnections(FaceLandmarker.FACE_LANDMARKS_LEFT_EYEBROW, 'rgba(250, 250, 250, 0.85)', 1.35);
+        drawConnections(FaceLandmarker.FACE_LANDMARKS_RIGHT_EYEBROW, 'rgba(250, 250, 250, 0.85)', 1.35);
+        drawConnections(FaceLandmarker.FACE_LANDMARKS_LEFT_EYE, 'rgba(225, 29, 72, 0.95)', 1.45);
+        drawConnections(FaceLandmarker.FACE_LANDMARKS_RIGHT_EYE, 'rgba(225, 29, 72, 0.95)', 1.45);
+        drawConnections(FaceLandmarker.FACE_LANDMARKS_LEFT_IRIS, 'rgba(250, 250, 250, 0.9)', 1.25);
+        drawConnections(FaceLandmarker.FACE_LANDMARKS_RIGHT_IRIS, 'rgba(250, 250, 250, 0.9)', 1.25);
+        drawConnections(FaceLandmarker.FACE_LANDMARKS_LIPS, 'rgba(244, 244, 245, 0.8)', 1.25);
+
+        const lIn = pt(133), lOut = pt(33), rIn = pt(362), rOut = pt(263);
+        const upperLipTop = pt(0), chinBottom = pt(17);
+        ctx.strokeStyle = '#E11D48';
+        ctx.lineWidth = 1.4;
+        ctx.beginPath();
+        ctx.moveTo(lOut.x, lOut.y); ctx.lineTo(lIn.x, lIn.y);
+        ctx.moveTo(rIn.x, rIn.y); ctx.lineTo(rOut.x, rOut.y);
+        ctx.moveTo(noseBase.x, noseBase.y); ctx.lineTo(upperLipTop.x, upperLipTop.y);
+        ctx.moveTo(chinBottom.x, chinBottom.y); ctx.lineTo(chin.x, chin.y);
+        ctx.stroke();
+
+        drawChain(NOSE_BRIDGE_CHAIN, 'rgba(250, 250, 250, 0.92)', 1.55);
+        drawChain(NOSE_ALAR_CHAIN, 'rgba(250, 250, 250, 0.72)', 1.25);
+
+        ctx.save();
+        ctx.shadowColor = 'rgba(225, 29, 72, 0.75)';
+        ctx.shadowBlur = 11;
+        drawSmoothSpline(ctx, LEFT_RAMUS_JAW.map(pt), '#E11D48', 2.6);
+        drawSmoothSpline(ctx, RIGHT_RAMUS_JAW.map(pt), '#E11D48', 2.6);
+        ctx.restore();
+
+        const lGonion = pt(58), rGonion = pt(288), lRamus = pt(234), rRamus = pt(454);
+        if (liveMetrics) {
+          drawGonialAngleArc(ctx, lRamus, lGonion, chin, 16, `${liveMetrics.leftGonialDeg.toFixed(1)}°`, lGonion.x < chin.x ? -38 : 8);
+          drawGonialAngleArc(ctx, rRamus, rGonion, chin, 16, `${liveMetrics.rightGonialDeg.toFixed(1)}°`, rGonion.x > chin.x ? 8 : -38);
+          ctx.font = '600 10px "JetBrains Mono", monospace';
+          ctx.fillStyle = 'rgba(250, 250, 250, 0.95)';
+          const sign = liveMetrics.canthalTiltDeg >= 0 ? '+' : '';
+          const eyePt = lOut.x > rOut.x ? lOut : rOut;
+          ctx.fillText(`${sign}${liveMetrics.canthalTiltDeg.toFixed(1)}°`, eyePt.x + 8, eyePt.y - 4);
+        }
+
+        const primaryNodes = [58, 288, 152, 1];
+        const secondaryNodes = [10, 54, 284, 132, 361, 234, 454, 33, 133, 362, 263, 129, 358, 61, 291];
+        for (const idx of secondaryNodes) {
+          const p = pt(idx);
+          ctx.beginPath(); ctx.arc(p.x, p.y, 2.0, 0, Math.PI * 2);
+          ctx.fillStyle = '#FAFAFA'; ctx.fill();
+        }
+        for (const idx of primaryNodes) {
+          const p = pt(idx);
+          ctx.beginPath(); ctx.arc(p.x, p.y, 3.3, 0, Math.PI * 2);
+          ctx.fillStyle = '#E11D48'; ctx.fill();
+          ctx.beginPath(); ctx.arc(p.x, p.y, 6.4, 0, Math.PI * 2);
+          ctx.strokeStyle = 'rgba(225, 29, 72, 0.55)'; ctx.lineWidth = 1; ctx.stroke();
+        }
+        ctx.restore();
+      }
+
+      // =======================================================================
+      // 5. 21-Angle Spherical Pose Fusion & True Bell-Curve Scoring Engine
+      // =======================================================================
+      const POSE_GRID = [
+        [
+          { id: 'up_hard_left', label: 'Up H-L' },
+          { id: 'up_prof_left', label: 'Up P-L' },
+          { id: 'up_34_left', label: 'Up 3/4L' },
+          { id: 'up', label: 'Up' },
+          { id: 'up_34_right', label: 'Up 3/4R' },
+          { id: 'up_prof_right', label: 'Up P-R' },
+          { id: 'up_hard_right', label: 'Up H-R' },
+        ],
+        [
+          { id: 'hard_left', label: 'Hard L' },
+          { id: 'prof_left', label: 'Prof L' },
+          { id: 'left_34', label: 'Left 3/4' },
+          { id: 'front', label: 'Front' },
+          { id: 'right_34', label: 'Right 3/4' },
+          { id: 'prof_right', label: 'Prof R' },
+          { id: 'hard_right', label: 'Hard R' },
+        ],
+        [
+          { id: 'down_hard_left', label: 'Dn H-L' },
+          { id: 'down_prof_left', label: 'Dn P-L' },
+          { id: 'down_34_left', label: 'Dn 3/4L' },
+          { id: 'down', label: 'Down' },
+          { id: 'down_34_right', label: 'Dn 3/4R' },
+          { id: 'down_prof_right', label: 'Dn P-R' },
+          { id: 'down_hard_right', label: 'Dn H-R' },
+        ],
+      ];
+      const ALL_POSE_IDS = POSE_GRID.flat().map((p) => p.id);
+
+      function classifyPose(yawDeg, pitchDeg) {
+        const pitchBand = pitchDeg >= 8 ? 'up' : pitchDeg <= -8 ? 'down' : 'mid';
+        const yawCol =
+          yawDeg <= -34 ? 'hard_left'
+            : yawDeg <= -20 ? 'prof_left'
+            : yawDeg <= -7 ? 'left_34'
+            : yawDeg >= 34 ? 'hard_right'
+            : yawDeg >= 20 ? 'prof_right'
+            : yawDeg >= 7 ? 'right_34'
+            : 'center';
+        if (pitchBand === 'mid') return yawCol === 'center' ? 'front' : yawCol;
+        if (yawCol === 'center') return pitchBand;
+        if (yawCol === 'left_34') return `${pitchBand}_34_left`;
+        if (yawCol === 'right_34') return `${pitchBand}_34_right`;
+        return `${pitchBand}_${yawCol}`;
+      }
+
+      function parsePose(pose) {
+        const pitch = pose.startsWith('up') ? 'up' : pose.startsWith('down') ? 'down' : 'mid';
+        let yaw = 'center';
+        if (pose.endsWith('hard_left')) yaw = 'hard_left';
+        else if (pose.endsWith('hard_right')) yaw = 'hard_right';
+        else if (pose.endsWith('prof_left')) yaw = 'prof_left';
+        else if (pose.endsWith('prof_right')) yaw = 'prof_right';
+        else if (pose.endsWith('34_left') || pose === 'left_34') yaw = 'left_34';
+        else if (pose.endsWith('34_right') || pose === 'right_34') yaw = 'right_34';
+        return { pitch, yaw };
+      }
+
+      function buildWeightMap(fn) {
+        const map = {};
+        for (const pose of ALL_POSE_IDS) {
+          const { yaw, pitch } = parsePose(pose);
+          map[pose] = fn(yaw, pitch);
+        }
+        return map;
+      }
+
+      const W_LEFT_GONIAL = buildWeightMap((y, p) => (y === 'hard_right' ? 4.2 : y === 'prof_right' ? 3.4 : y === 'right_34' ? 2.2 : y === 'center' ? 1.0 : 0.5) * (p === 'up' ? 1.3 : p === 'mid' ? 1.0 : 0.75));
+      const W_RIGHT_GONIAL = buildWeightMap((y, p) => (y === 'hard_left' ? 4.2 : y === 'prof_left' ? 3.4 : y === 'left_34' ? 2.2 : y === 'center' ? 1.0 : 0.5) * (p === 'up' ? 1.3 : p === 'mid' ? 1.0 : 0.75));
+      const W_AVG_GONIAL = buildWeightMap((y, p) => (y === 'hard_left' || y === 'hard_right' ? 4.0 : y === 'prof_left' || y === 'prof_right' ? 3.2 : y === 'left_34' || y === 'right_34' ? 2.0 : 0.9) * (p === 'up' ? 1.35 : p === 'mid' ? 1.0 : 0.75));
+      const W_FRONT_DOMINANT = buildWeightMap((y, p) => (y === 'center' && p === 'mid' ? 4.5 : y === 'center' ? 1.7 : (y === 'left_34' || y === 'right_34') && p === 'mid' ? 0.9 : y === 'left_34' || y === 'right_34' ? 0.45 : 0.12));
+      const W_EYES = buildWeightMap((y, p) => (y === 'center' && p === 'mid' ? 4.2 : y === 'center' && p === 'down' ? 2.1 : (y === 'left_34' || y === 'right_34') && p !== 'up' ? 1.1 : 0.25));
+      const W_BROW_RIDGE = buildWeightMap((y, p) => (p === 'down' ? 1.9 : p === 'mid' ? 1.1 : 0.5) * (y === 'left_34' || y === 'right_34' ? 2.6 : y === 'prof_left' || y === 'prof_right' ? 2.0 : 1.3));
+      const W_CHEEKBONE_34 = buildWeightMap((y, p) => (y === 'left_34' || y === 'right_34' ? 3.4 : y === 'prof_left' || y === 'prof_right' ? 2.3 : y === 'center' ? 1.3 : 1.4) * (p === 'down' ? 1.3 : p === 'mid' ? 1.0 : 0.85));
+      const W_PROFILE_PROJECTION = buildWeightMap((y, p) => (y === 'hard_left' || y === 'hard_right' ? 4.4 : y === 'prof_left' || y === 'prof_right' ? 3.3 : y === 'left_34' || y === 'right_34' ? 1.9 : 0.8) * (p === 'mid' ? 1.15 : p === 'up' ? 1.1 : 0.8));
+      const W_HAIRLINE = buildWeightMap((y, p) => (p === 'down' ? 2.4 : p === 'mid' ? 1.25 : 0.35) * (y === 'center' ? 1.9 : y === 'left_34' || y === 'right_34' ? 1.5 : 0.45));
+
+      function createEmptyBucket() {
+        return {
+          count: 0, eyeFrames: 0, pixelFrames: 0,
+          sumGonial: 0, sumLeftGonial: 0, sumRightGonial: 0, sumChinAngle: 0, sumJawWidth: 0,
+          sumSymmetry: 0, sumCanthalTilt: 0, sumEyeAperture: 0, sumEyeSpacing: 0,
+          sumEyebrowGap: 0, sumBrowRidgeDepth: 0, sumNoseWidth: 0, sumNoseStraightness: 0,
+          sumNoseProfileStraightness: 0, sumMouthWidth: 0, sumLipBalance: 0, sumMouthSymmetry: 0,
+          sumPhiltrumRatio: 0, sumPhi: 0, sumFwhr: 0, sumCheekboneDepth: 0, sumChinProjection: 0,
+          sumThirdsBalance: 0, sumEyebrowDensity: 0, sumHairline: 0,
+        };
+      }
+
+      function createEmptyRollingState() {
+        const buckets = {};
+        for (const id of ALL_POSE_IDS) buckets[id] = createEmptyBucket();
+        return {
+          sampleCount: 0,
+          activePose: 'front',
+          buckets,
+          latestObstruction: { foreheadObstructed: false, obstructionReason: null },
+        };
+      }
+
+      function mergeLiveFrame(state, sample, pixels) {
+        const pose = classifyPose(sample.yawDeg, sample.pitchDeg);
+        const b = state.buckets[pose];
+        b.count += 1;
+        b.sumGonial += sample.gonialAngleDeg;
+        b.sumLeftGonial += sample.leftGonialDeg;
+        b.sumRightGonial += sample.rightGonialDeg;
+        b.sumChinAngle += sample.chinAngleDeg;
+        b.sumJawWidth += sample.jawToCheekRatio;
+        b.sumSymmetry += sample.symmetryPct;
+        b.sumEyeSpacing += sample.eyeSpacingRatio;
+        b.sumEyebrowGap += sample.eyebrowGapRatio;
+        b.sumBrowRidgeDepth += sample.browRidgeDepthScore;
+        b.sumNoseWidth += sample.noseWidthRatio;
+        b.sumNoseStraightness += sample.noseStraightnessScore;
+        b.sumNoseProfileStraightness += sample.noseProfileStraightness;
+        b.sumMouthWidth += sample.mouthWidthRatio;
+        b.sumLipBalance += sample.lipBalanceRatio;
+        b.sumMouthSymmetry += sample.mouthSymmetryScore;
+        b.sumPhiltrumRatio += sample.philtrumRatio;
+        b.sumPhi += sample.phiRatio;
+        b.sumFwhr += sample.fwhr;
+        b.sumCheekboneDepth += sample.cheekboneDepthScore;
+        b.sumChinProjection += sample.chinProjectionDeg;
+        b.sumThirdsBalance += sample.thirdsBalanceScore;
+        if (!sample.isBlinking) {
+          b.eyeFrames += 1;
+          b.sumCanthalTilt += sample.canthalTiltDeg;
+          b.sumEyeAperture += sample.eyeApertureRatio;
+        }
+        if (pixels) {
+          b.pixelFrames += 1;
+          b.sumEyebrowDensity += pixels.eyebrowDensityScore;
+          b.sumHairline += pixels.hairlineScore;
+          state.latestObstruction = {
+            foreheadObstructed: pixels.foreheadObstructed,
+            obstructionReason: pixels.obstructionReason,
+          };
+        }
+        state.sampleCount += 1;
+        state.activePose = pose;
+        return state;
+      }
+
+      function buildLiveScanResult(state, snapshotUrl) {
+        const buckets = state.buckets;
+        const blendField = (field, weights, countKey = 'count', fallback = 0) => {
+          let wSum = 0, wTotal = 0;
+          for (const pose of ALL_POSE_IDS) {
+            const b = buckets[pose];
+            const n = b[countKey];
+            if (n <= 0 || weights[pose] <= 0) continue;
+            const w = weights[pose] * (0.45 + 0.55 * Math.min(1, n / 5));
+            wSum += (b[field] / n) * w;
+            wTotal += w;
+          }
+          return wTotal > 0 ? wSum / wTotal : fallback;
+        };
+
+        const gonialAngleDeg = round1(blendField('sumGonial', W_AVG_GONIAL, 'count', 125.0));
+        const chinAngleDeg = round1(blendField('sumChinAngle', W_FRONT_DOMINANT, 'count', 84.0));
+        const jawToCheekRatio = round2(blendField('sumJawWidth', W_FRONT_DOMINANT, 'count', 0.76));
+        const symmetryPct = round1(blendField('sumSymmetry', W_FRONT_DOMINANT, 'count', 91.2));
+        const canthalTiltDeg = round2(blendField('sumCanthalTilt', W_EYES, 'eyeFrames', 0.8));
+        const eyeApertureRatio = round2(blendField('sumEyeAperture', W_EYES, 'eyeFrames', 3.0));
+        const eyeSpacingRatio = round2(blendField('sumEyeSpacing', W_FRONT_DOMINANT, 'count', 1.06));
+        const eyebrowGapRatio = round2(blendField('sumEyebrowGap', W_EYES, 'count', 0.52));
+        const browRidgeDepthScore = round2(blendField('sumBrowRidgeDepth', W_BROW_RIDGE, 'count', 5.5));
+        const noseWidthRatio = round2(blendField('sumNoseWidth', W_FRONT_DOMINANT, 'count', 1.14));
+        const noseStraightnessScore = round2(blendField('sumNoseStraightness', W_FRONT_DOMINANT, 'count', 6.0));
+        const noseProfileStraightness = round2(blendField('sumNoseProfileStraightness', W_PROFILE_PROJECTION, 'count', 5.8));
+        const mouthWidthRatio = round2(blendField('sumMouthWidth', W_FRONT_DOMINANT, 'count', 1.35));
+        const lipBalanceRatio = round2(blendField('sumLipBalance', W_FRONT_DOMINANT, 'count', 1.34));
+        const mouthSymmetryScore = round2(blendField('sumMouthSymmetry', W_FRONT_DOMINANT, 'count', 6.0));
+        const philtrumRatio = round2(blendField('sumPhiltrumRatio', W_FRONT_DOMINANT, 'count', 0.46));
+        const phiRatio = round2(blendField('sumPhi', W_FRONT_DOMINANT, 'count', 1.54));
+        const cheekboneDepthScore = round2(blendField('sumCheekboneDepth', W_CHEEKBONE_34, 'count', 5.5));
+        const chinProjectionDeg = round1(blendField('sumChinProjection', W_PROFILE_PROJECTION, 'count', 161.5));
+        const thirdsBalanceScore = round2(blendField('sumThirdsBalance', W_HAIRLINE, 'count', 5.8));
+        const eyebrowDensityScore = round2(blendField('sumEyebrowDensity', W_BROW_RIDGE, 'pixelFrames', 5.5));
+        const hairlineScorePx = round2(blendField('sumHairline', W_HAIRLINE, 'pixelFrames', 5.6));
+
+        const connectedAngles = ALL_POSE_IDS.filter((id) => buckets[id].count > 0).length;
+        const sideFrames = state.sampleCount - (buckets.front.count + buckets.up.count + buckets.down.count);
+
+        const gonialErr = Math.abs(gonialAngleDeg - 119.5);
+        const jawScore = clamp(round2(7.35 - gonialErr * 0.27 + clamp((jawToCheekRatio - 0.77) * 11.0, -1.0, 1.1) + clamp((86.0 - chinAngleDeg) * 0.055, -0.55, 0.55)), 2.5, 9.4);
+        const symScore = clamp(round2(5.45 + (symmetryPct - 91.2) * 0.52), 2.5, 9.4);
+        const eyeScore = clamp(round2(5.15 + canthalTiltDeg * 0.58 + clamp((eyeApertureRatio - 3.05) * 0.65, -0.85, 0.85) - Math.abs(1.03 - eyeSpacingRatio) * 1.8), 2.5, 9.4);
+        const eyebrowScore = clamp(round2(eyebrowDensityScore * 0.5 + browRidgeDepthScore * 0.5 + clamp((0.52 - eyebrowGapRatio) * 3.8, -0.75, 0.75)), 2.8, 9.3);
+        const hasProfileNose = sideFrames > 2;
+        const bridgeScore = hasProfileNose ? noseStraightnessScore * 0.55 + noseProfileStraightness * 0.45 : noseStraightnessScore;
+        const noseScore = clamp(round2(bridgeScore - Math.abs(1.06 - noseWidthRatio) * 4.2), 2.6, 9.3);
+        const mouthScore = clamp(round2(mouthSymmetryScore - Math.abs(1.44 - mouthWidthRatio) * 2.8 - Math.abs(1.42 - lipBalanceRatio) * 1.25 - Math.abs(0.43 - philtrumRatio) * 3.2), 2.8, 9.2);
+        const hairlineObstructed = state.latestObstruction.foreheadObstructed;
+        const hairlineScore = hairlineObstructed ? 4.2 : clamp(round2(hairlineScorePx * 0.55 + thirdsBalanceScore * 0.45), 2.8, 9.2);
+        const harmonyScore = clamp(round2(7.05 - Math.abs(166.5 - chinProjectionDeg) * 0.22 - Math.abs(1.618 - phiRatio) * 6.5 + (cheekboneDepthScore - 5.5) * 0.42), 2.6, 9.4);
+
+        const coreWeighted = jawScore * 0.23 + eyeScore * 0.2 + symScore * 0.17 + harmonyScore * 0.15 + eyebrowScore * 0.08 + noseScore * 0.08 + mouthScore * 0.05 + hairlineScore * 0.04;
+        const lowestCore = Math.min(jawScore, eyeScore, symScore, harmonyScore, noseScore);
+        const failoPenalty = lowestCore < 4.4 ? (4.4 - lowestCore) * 0.26 : 0;
+        const haloBoost = coreWeighted > 7.4 ? (coreWeighted - 7.4) * 0.18 : 0;
+        const overallPsl = clamp(round2(coreWeighted - failoPenalty + haloBoost), 2.4, 9.3);
+
+        let tierLabel = 'MTN · Mid-Tier Normie';
+        let headlineVerdict = 'Dead-center real-world average (5.0–5.7). Normal everyday proportions.';
+        let grindsetAdvice = connectedAngles < 10
+          ? `Rotate smoothly through more diagonal angles (${connectedAngles}/21 zones fused—hit Hard Left/Right & Down-Left/Right) to sharpen accuracy.`
+          : `Full 21-zone data fused (${connectedAngles}/21). Lean down, refine brows, and tighten grooming to break HTN.`;
+
+        if (overallPsl >= 8.7) {
+          tierLabel = 'True Adam · Top 0.01%';
+          headlineVerdict = 'Freakish 21-angle facial harmony. Virtually zero structural failos.';
+          grindsetAdvice = 'Elite craniofacial structure from hairline to mandible. Unmoggable.';
+        } else if (overallPsl >= 7.8) {
+          tierLabel = 'Chad / Gigachad · Top 0.1%';
+          headlineVerdict = 'Sharp gonial angle, positive canthal tilt, balanced nose/lips, and forward growth.';
+          grindsetAdvice = 'Model-tier multi-angle geometry. Stay lean to keep hollow cheeks.';
+        } else if (overallPsl >= 6.8) {
+          tierLabel = 'Chadlite · Top 2%';
+          headlineVerdict = 'High-end jawline, strong brow ridge, and crisp symmetry across connected angles.';
+          grindsetAdvice = connectedAngles < 12 ? 'Sweep remaining profile & diagonal zones to verify full 3D balance.' : 'Tiny refinements separate this structure from full Chad tier.';
+        } else if (overallPsl >= 5.8) {
+          tierLabel = 'HTN · High-Tier Normie';
+          headlineVerdict = 'Visibly above average (~top 15–25%) with solid structural traits.';
+          grindsetAdvice = 'Softmaxx hard: drop a bit of body fat, tighten brows, and optimize haircut framing.';
+        } else if (overallPsl < 4.9) {
+          tierLabel = 'Sub-5 · Brutal Reality Check';
+          headlineVerdict = 'Recessed lower third, steep gonial angle, or noticeable asymmetry flagged.';
+          grindsetAdvice = 'Verify even lighting at eye level first—then prioritize leanness, posture, and framing.';
+        }
+
+        const metrics = [
+          {
+            id: 'jawline',
+            label: 'Jawline & Gonial Angle',
+            valueDisplay: `${round1(gonialAngleDeg).toFixed(1)}°`,
+            score: jawScore,
+            slangNote: jawScore >= 7.0 ? `Sharp ${round1(gonialAngleDeg).toFixed(1)}° ramus & ${round1(chinAngleDeg).toFixed(0)}° chin wedge.` : jawScore >= 5.2 ? `Average ${round1(gonialAngleDeg).toFixed(1)}° gonial angle across ${connectedAngles}/21 zones.` : `Steep ${round1(gonialAngleDeg).toFixed(1)}° mandible—check Hard Left/Right profiles for true ramus.`,
+          },
+          {
+            id: 'symmetry',
+            label: 'Facial Symmetry',
+            valueDisplay: `${round1(symmetryPct).toFixed(1)}%`,
+            score: symScore,
+            slangNote: symmetryPct >= 93.2 ? 'Tight frontal left-right alignment across eyes, nose, mouth, and jaw.' : symmetryPct >= 90.0 ? 'Normal human asymmetry (~91% avg)—minor natural brow or jaw drift.' : 'Clear midline asymmetry across paired landmarks.',
+          },
+          {
+            id: 'eyes',
+            label: 'Eyes & Canthal Tilt',
+            valueDisplay: `${canthalTiltDeg >= 0 ? '+' : ''}${round1(canthalTiltDeg).toFixed(1)}° · ${round1(eyeApertureRatio).toFixed(1)}x`,
+            score: eyeScore,
+            slangNote: canthalTiltDeg >= 2.4 ? 'Positive canthal tilt with compact eye aperture & clean spacing.' : canthalTiltDeg >= 0.1 ? 'Neutral tilt and average lid exposure.' : 'Negative tilt or rounder eye exposure lowering eye-area score.',
+          },
+          {
+            id: 'eyebrows',
+            label: 'Eyebrows & Brow Ridge',
+            valueDisplay: `${round1(eyebrowScore).toFixed(1)} / 10`,
+            score: eyebrowScore,
+            slangNote: eyebrowScore >= 7.0 ? 'Dense, low-set brow arch with strong supraorbital overhang.' : eyebrowScore >= 5.2 ? 'Everyday brow thickness and moderate brow-to-eye gap.' : 'Higher-set arch or lighter brow contrast.',
+          },
+          {
+            id: 'nose',
+            label: 'Nose Bridge & Alar Width',
+            valueDisplay: `${round2(noseWidthRatio).toFixed(2)}x · ${round1(noseScore).toFixed(1)}`,
+            score: noseScore,
+            slangNote: noseScore >= 7.0 ? `Straight bridge and tight alar width (${hasProfileNose ? 'profile fused' : 'frontal'}).` : noseScore >= 5.2 ? 'Standard nasal proportions and mild bridge variance.' : 'Wide alar base or noticeable dorsal curve flagged.',
+          },
+          {
+            id: 'mouth',
+            label: 'Mouth & Lip Proportions',
+            valueDisplay: `${round2(mouthWidthRatio).toFixed(2)}x · 1:${round1(lipBalanceRatio).toFixed(1)}`,
+            score: mouthScore,
+            slangNote: mouthScore >= 7.0 ? 'Proportional mouth width, balanced lip ratio, and tight philtrum.' : mouthScore >= 5.2 ? 'Average mouth-to-alar width and philtrum proportion.' : 'Narrow mouth span, longer philtrum, or corner tilt.',
+          },
+          {
+            id: 'hairline',
+            label: 'Hairline & Forehead Thirds',
+            valueDisplay: hairlineObstructed ? 'Obstructed' : `${round1(hairlineScore).toFixed(1)} / 10`,
+            score: hairlineScore,
+            slangNote: hairlineObstructed ? 'Hat or headwear blocked forehead—remove hats for an accurate hairline reading.' : hairlineScore >= 7.0 ? 'Balanced thirds and clean temple hairline across down-3/4 angles.' : hairlineScore >= 5.2 ? 'Normal upper third—check Down-Left & Down-Right to map temples.' : 'Tall forehead third or noticeable temple recession.',
+          },
+          {
+            id: 'harmony',
+            label: 'Cheekbones, Chin & Golden Ratio',
+            valueDisplay: `${round2(phiRatio).toFixed(2)} φ · ${round1(chinProjectionDeg).toFixed(0)}°`,
+            score: harmonyScore,
+            slangNote: harmonyScore >= 7.0 ? 'Strong forward chin/maxilla projection, high zygos & tight Phi.' : harmonyScore >= 5.2 ? 'Everyday midface projection and golden ratio balance.' : 'Recessed chin projection or off-balance facial ratio.',
+          },
+        ];
+
+        return {
+          id: `live-${Date.now()}`,
+          subjectName: `21-Zone Fusion (${connectedAngles}/21 Angles)`,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+          overallPsl,
+          tierLabel,
+          headlineVerdict,
+          grindsetAdvice,
+          landmarkCount: 478,
+          metrics,
+          snapshotUrl,
+          connectedAngles,
+          totalFrames: state.sampleCount,
+        };
+      }
+
+      // =======================================================================
+      // 6. DOM Wiring & App State
+      // =======================================================================
+      const STORAGE_KEY = 'mogmeter_single_history_v1';
+      let cameraMode = 'idle';
+      let showMeshOverlay = true;
+      let isModelLoading = true;
+      let mediaStream = null;
+      let rafId = null;
+      let lastVideoTime = -1;
+      let lastPixelCheck = 0;
+      let lastUiSync = 0;
+      let smoothedLandmarks = null;
+      let rollingState = createEmptyRollingState();
+      let currentResult = null;
+      let savedSnapshotMesh = null;
+      let history = [];
+      try {
+        const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+        if (Array.isArray(parsed)) history = parsed;
+      } catch {
+        history = [];
+      }
+
+      const $ = (id) => document.getElementById(id);
+      const videoEl = $('videoEl');
+      const snapshotImg = $('snapshotImg');
+      const standbyBox = $('standbyBox');
+      const overlayCanvas = $('overlayCanvas');
+      const hudTop = $('hudTop');
+      const radarDot = $('radarDot');
+      const radarRing = $('radarRing');
+      const poseText = $('poseText');
+      const activeZoneText = $('activeZoneText');
+      const hudZones = $('hudZones');
+      const hudFrames = $('hudFrames');
+      const stageStatusLabel = $('stageStatusLabel');
+      const stageLandmarkLabel = $('stageLandmarkLabel');
+      const toggleMeshBtn = $('toggleMeshBtn');
+      const meshBtnIcon = $('meshBtnIcon');
+      const poseGridEl = $('poseGrid');
+      const matrixSummary = $('matrixSummary');
+      const matrixProgress = $('matrixProgress');
+      const accessoryAlert = $('accessoryAlert');
+      const accessoryMsg = $('accessoryMsg');
+      const cameraErrorBox = $('cameraErrorBox');
+      const controlsHint = $('controlsHint');
+      const saveSnapshotBtn = $('saveSnapshotBtn');
+      const resetDataBtn = $('resetDataBtn');
+      const stopCameraBtn = $('stopCameraBtn');
+      const startCameraBtn = $('startCameraBtn');
+      const topPrimaryBtn = $('topPrimaryBtn');
+      const panelPrimaryBtn = $('panelPrimaryBtn');
+      const scoreSubline = $('scoreSubline');
+      const scoreTier = $('scoreTier');
+      const scoreVal = $('scoreVal');
+      const bellFill = $('bellFill');
+      const bellNeedle = $('bellNeedle');
+      const verdictHeadline = $('verdictHeadline');
+      const verdictAdvice = $('verdictAdvice');
+      const metricsList = $('metricsList');
+      const historyEmpty = $('historyEmpty');
+      const historyTableCard = $('historyTableCard');
+      const historyBody = $('historyBody');
+      const clearHistoryBtn = $('clearHistoryBtn');
+
+      const EYE_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>';
+      const EYE_OFF_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></svg>';
+
+      const DEFAULT_METRICS = [
+        { id: 'jawline', label: 'Jawline & Gonial Angle', valueDisplay: '—', score: 0, slangNote: 'Combines profile ramus angle, chin wedge & frontal jaw width.' },
+        { id: 'symmetry', label: 'Facial Symmetry', valueDisplay: '—', score: 0, slangNote: 'True population average sits around 91% (~5.4/10).' },
+        { id: 'eyes', label: 'Eyes & Canthal Tilt', valueDisplay: '—', score: 0, slangNote: 'Canthal tilt, hunter-eye aperture, and eye-spacing ratio.' },
+        { id: 'eyebrows', label: 'Eyebrows & Brow Ridge', valueDisplay: '—', score: 0, slangNote: 'Density, low-set brow gap, and 3D supraorbital depth.' },
+        { id: 'nose', label: 'Nose Bridge & Alar Width', valueDisplay: '—', score: 0, slangNote: 'Fuses frontal alar ratio with side dorsal straightness.' },
+        { id: 'mouth', label: 'Mouth & Lip Proportions', valueDisplay: '—', score: 0, slangNote: 'Mouth width, 1:1.4 lip balance, and philtrum proportion.' },
+        { id: 'hairline', label: 'Hairline & Forehead Thirds', valueDisplay: '—', score: 0, slangNote: 'Upper third balance and temple hairline contour.' },
+        { id: 'harmony', label: 'Cheekbones, Chin & Golden Ratio', valueDisplay: '—', score: 0, slangNote: 'Fuses side chin projection, zygomatic relief & 1.618 Phi.' },
+      ];
+
+      function renderStaticLore() {
+        $('timelineGrid').innerHTML = TIMELINE_ERAS.map((era, i) => `
+          <div class="card pad-card">
+            <div>
+              <div style="font-size:12px;color:var(--muted);">0${i + 1}. ${era.period}</div>
+              <h3 class="font-display" style="margin:8px 0 0;font-size:20px;font-weight:600;color:#fff;">${era.title}</h3>
+              <p style="margin:12px 0 0;font-size:12px;color:var(--muted);line-height:1.6;">${era.summary}</p>
+            </div>
+            <div style="margin-top:20px;border-top:1px solid var(--border);padding-top:12px;font-size:12px;color:#d4d4d8;">${era.keyTerms}</div>
+          </div>
+        `).join('');
+
+        $('eraTableBody').innerHTML = ERA_TRANSLATIONS.map((row) => `
+          <tr>
+            <td style="font-weight:500;color:#fff;">${row.concept}</td>
+            <td>${row.forumOrigins}</td>
+            <td>${row.sigmaWave}</td>
+            <td style="font-weight:500;color:var(--accent);">${row.tiktokLooksmaxxing}</td>
+          </tr>
+        `).join('');
+
+        $('pslTierGrid').innerHTML = PSL_TIER_GUIDE.map((item) => `
+          <div class="card" style="padding:20px;">
+            <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;">
+              <span class="font-display" style="font-size:18px;font-weight:600;color:#fff;">${item.tier}</span>
+              <span class="font-mono-tabular" style="font-size:12px;font-weight:600;color:var(--accent);">PSL ${item.range}</span>
+            </div>
+            <div style="margin-top:4px;font-size:12px;color:var(--muted);">
+              Distribution · <span class="font-mono-tabular" style="color:#d4d4d8;">${item.percentile}</span>
+            </div>
+            <p style="margin:10px 0 0;font-size:12px;color:var(--muted);line-height:1.6;">${item.vibeNote}</p>
+          </div>
+        `).join('');
+
+        $('glossaryGrid').innerHTML = SLANG_GLOSSARY.map((entry) => `
+          <div class="card" style="padding:20px;">
+            <div style="font-size:12px;color:var(--muted);">${entry.originNote}</div>
+            <div style="margin-top:6px;font-size:16px;font-weight:600;color:#fff;">${entry.term}</div>
+            <p style="margin:8px 0 0;font-size:12px;color:var(--muted);line-height:1.6;">${entry.definition}</p>
+          </div>
+        `).join('');
+      }
+
+      const cellMap = {};
+      function buildPoseGrid() {
+        poseGridEl.innerHTML = '';
+        for (const row of POSE_GRID) {
+          const rowEl = document.createElement('div');
+          rowEl.className = 'matrix-row';
+          for (const item of row) {
+            const cell = document.createElement('div');
+            cell.className = 'matrix-cell';
+            cell.innerHTML = `<div class="matrix-label">${item.label}</div><div class="font-mono-tabular matrix-count">—</div>`;
+            rowEl.appendChild(cell);
+            cellMap[item.id] = { cell, countEl: cell.querySelector('.matrix-count') };
+          }
+          poseGridEl.appendChild(rowEl);
+        }
+      }
+
+      function renderPoseMatrix(activePose) {
+        let connected = 0;
+        for (const id of ALL_POSE_IDS) {
+          const cnt = rollingState.buckets[id].count;
+          if (cnt > 0) connected += 1;
+          const ref = cellMap[id];
+          if (!ref) continue;
+          ref.cell.classList.toggle('is-active', cameraMode === 'live' && activePose === id);
+          ref.cell.classList.toggle('is-captured', cnt > 0);
+          ref.countEl.textContent = cnt > 0 ? String(cnt) : '—';
+        }
+        const pct = Math.round((connected / 21) * 100);
+        matrixSummary.textContent = `${connected}/21 zones connected (${pct}%)`;
+        matrixProgress.style.width = `${pct}%`;
+        hudZones.textContent = `${connected}/21 zones`;
+      }
+
+      function renderMetrics(res) {
+        const list = res ? res.metrics : DEFAULT_METRICS;
+        const pop = res !== null;
+        metricsList.innerHTML = list.map((m) => {
+          const pct = pop ? clamp(Math.round((m.score / 10) * 100), 8, 100) : 0;
+          const barBg = !pop ? '#E11D48' : m.score >= 7.2 ? 'linear-gradient(to right, #E11D48, #fda4af)' : m.score >= 5.0 ? '#E11D48' : '#71717a';
+          const scoreColor = pop && m.score >= 7.0 ? 'color:#fda4af;font-weight:600;' : pop && m.score < 4.9 ? 'color:#71717a;' : '';
+          return `
+            <div class="metric-row">
+              <div class="metric-top">
+                <span class="metric-label">${m.label}</span>
+                <div class="metric-vals">
+                  <span class="font-mono-tabular metric-val-main">${m.valueDisplay}</span>
+                  <span class="font-mono-tabular metric-val-score" style="${scoreColor}">${pop ? `${m.score.toFixed(2)}/10` : '—/10'}</span>
+                </div>
+              </div>
+              <div class="metric-bar-track"><div class="metric-bar-fill" style="width:${pct}%;background:${barBg};"></div></div>
+              <p class="metric-note">${m.slangNote}</p>
+            </div>
+          `;
+        }).join('');
+      }
+
+      function renderResultCard(res) {
+        if (!res) {
+          scoreSubline.textContent = 'Population Average = 5.30 MTN';
+          scoreTier.textContent = 'Awaiting Live Face';
+          scoreVal.textContent = '—';
+          bellFill.style.width = '0%';
+          bellNeedle.classList.add('hidden');
+          verdictHeadline.textContent = 'Look into the camera and slowly turn through angles—your connected score updates live.';
+          verdictAdvice.textContent = 'Everyday faces average ~5.3 (MTN). Only genuine sharp bone structure & tight harmony reach 7.0+.';
+        } else {
+          const framesInfo = res.totalFrames ? ` · ${res.totalFrames} frames` : '';
+          scoreSubline.textContent = `${res.subjectName} · ${res.timestamp}${framesInfo}`;
+          scoreTier.textContent = res.tierLabel;
+          scoreVal.textContent = res.overallPsl.toFixed(2);
+          const pct = clamp(((res.overallPsl - 2.4) / (9.3 - 2.4)) * 100, 2, 98);
+          bellFill.style.width = `${pct}%`;
+          bellNeedle.style.left = `${pct}%`;
+          bellNeedle.classList.remove('hidden');
+          verdictHeadline.textContent = res.headlineVerdict;
+          verdictAdvice.textContent = res.grindsetAdvice;
+        }
+        renderMetrics(res);
+      }
+
+      function renderHistory() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(history.slice(0, 12)));
+        } catch {}
+        if (!history.length) {
+          historyEmpty.classList.remove('hidden');
+          historyTableCard.classList.add('hidden');
+          clearHistoryBtn.classList.add('hidden');
+          return;
+        }
+        historyEmpty.classList.add('hidden');
+        historyTableCard.classList.remove('hidden');
+        clearHistoryBtn.classList.remove('hidden');
+        historyBody.innerHTML = history.map((item, idx) => {
+          const jaw = item.metrics.find((m) => m.id === 'jawline')?.valueDisplay ?? '—';
+          const sym = item.metrics.find((m) => m.id === 'symmetry')?.valueDisplay ?? '—';
+          const eye = item.metrics.find((m) => m.id === 'eyes')?.valueDisplay ?? '—';
+          const active = currentResult && currentResult.id === item.id;
+          return `
+            <tr class="log-row ${active ? 'is-active' : ''}" data-idx="${idx}">
+              <td><div style="font-weight:500;color:#fff;">${item.subjectName}</div><div style="font-size:12px;color:var(--muted);">${item.timestamp}</div></td>
+              <td>${item.tierLabel}</td>
+              <td class="font-mono-tabular" style="text-align:right;">${jaw}</td>
+              <td class="font-mono-tabular" style="text-align:right;">${sym}</td>
+              <td class="font-mono-tabular" style="text-align:right;">${eye}</td>
+              <td class="font-mono-tabular" style="text-align:right;font-weight:600;color:#fff;">${item.overallPsl.toFixed(2)} / 10</td>
+            </tr>
+          `;
+        }).join('');
+        historyBody.querySelectorAll('.log-row').forEach((tr) => {
+          tr.addEventListener('click', () => {
+            const item = history[Number(tr.dataset.idx)];
+            if (!item) return;
+            currentResult = item;
+            renderResultCard(item);
+            renderHistory();
+            if (item.snapshotUrl) {
+              stopCameraStream();
+              snapshotImg.src = item.snapshotUrl;
+              setMode('snapshot');
+            }
+            $('scanner').scrollIntoView({ behavior: 'smooth' });
+          });
+        });
+      }
+
+      function setMode(nextMode) {
+        cameraMode = nextMode;
+        videoEl.classList.toggle('hidden', nextMode !== 'live');
+        snapshotImg.classList.toggle('hidden', nextMode !== 'snapshot');
+        standbyBox.classList.toggle('hidden', nextMode !== 'idle');
+        overlayCanvas.classList.toggle('hidden', nextMode === 'idle' || !showMeshOverlay);
+        hudTop.classList.toggle('hidden', nextMode !== 'live');
+        toggleMeshBtn.classList.toggle('hidden', nextMode === 'idle');
+        saveSnapshotBtn.classList.toggle('hidden', nextMode !== 'live');
+        resetDataBtn.classList.toggle('hidden', nextMode !== 'live');
+        stopCameraBtn.classList.toggle('hidden', nextMode !== 'live');
+        startCameraBtn.classList.toggle('hidden', nextMode === 'live');
+        meshBtnIcon.innerHTML = showMeshOverlay ? EYE_SVG : EYE_OFF_SVG;
+
+        if (nextMode === 'live') {
+          stageStatusLabel.textContent = '21-Angle Connected Rating';
+          controlsHint.textContent = 'Turn left, right, up, down, and diagonal—every zone connects permanently into your score.';
+          topPrimaryBtn.textContent = 'Save Snapshot';
+          panelPrimaryBtn.textContent = 'Save Connected Rating to Log';
+          panelPrimaryBtn.disabled = rollingState.sampleCount === 0;
+          saveSnapshotBtn.disabled = rollingState.sampleCount === 0;
+        } else if (nextMode === 'snapshot') {
+          stageStatusLabel.textContent = 'Saved Log Snapshot';
+          stageLandmarkLabel.textContent = '478 landmarks mapped';
+          controlsHint.textContent = 'Viewing saved snapshot. Resume live camera to collect more angles.';
+          topPrimaryBtn.textContent = 'Start Live Scan';
+          panelPrimaryBtn.textContent = 'Resume Connected Live Scan';
+          panelPrimaryBtn.disabled = false;
+          startCameraBtn.textContent = 'Resume Live Camera';
+          if (savedSnapshotMesh) {
+            drawMappedFaceOverlay(overlayCanvas, savedSnapshotMesh.landmarks, savedSnapshotMesh.w, savedSnapshotMesh.h, false, savedSnapshotMesh.metrics);
+          } else {
+            const ctx = overlayCanvas.getContext('2d');
+            if (ctx) ctx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+          }
+        } else {
+          stageStatusLabel.textContent = 'Camera Standby';
+          stageLandmarkLabel.textContent = isModelLoading ? 'Loading 478-pt mesh...' : 'Ready to map';
+          controlsHint.textContent = 'All 478-point mapping runs locally in your browser.';
+          topPrimaryBtn.textContent = 'Start Live Scan';
+          panelPrimaryBtn.textContent = 'Enable Camera & Start Live Rating';
+          panelPrimaryBtn.disabled = false;
+          startCameraBtn.textContent = 'Start Camera';
+        }
+      }
+
+      function stopCameraStream() {
+        if (rafId !== null) {
+          cancelAnimationFrame(rafId);
+          rafId = null;
+        }
+        if (mediaStream) {
+          mediaStream.getTracks().forEach((t) => t.stop());
+          mediaStream = null;
+        }
+        videoEl.srcObject = null;
+      }
+
+      async function startCamera() {
+        cameraErrorBox.classList.add('hidden');
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          cameraErrorBox.textContent = 'Camera access is unavailable in this browser context. Open in a standard browser tab with webcam permissions.';
+          cameraErrorBox.classList.remove('hidden');
+          return;
+        }
+        try {
+          stopCameraStream();
+          mediaStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 960 } },
+            audio: false,
+          });
+          smoothedLandmarks = null;
+          rollingState = createEmptyRollingState();
+          lastVideoTime = -1;
+          lastPixelCheck = 0;
+          lastUiSync = 0;
+          renderPoseMatrix(null);
+          setMode('live');
+
+          videoEl.srcObject = mediaStream;
+          try { await videoEl.play(); } catch {}
+
+          isModelLoading = true;
+          stageLandmarkLabel.textContent = 'Loading 478-pt mesh...';
+          const landmarker = await getVideoLandmarker();
+          isModelLoading = false;
+          if (cameraMode !== 'live') return;
+
+          const sampleCanvas = document.createElement('canvas');
+          const tick = () => {
+            if (cameraMode !== 'live') return;
+            if (videoEl.readyState >= 2 && videoEl.videoWidth > 0 && videoEl.currentTime !== lastVideoTime) {
+              lastVideoTime = videoEl.currentTime;
+              const now = performance.now();
+              const res = landmarker.detectForVideo(videoEl, now);
+              if (res.faceLandmarks && res.faceLandmarks.length > 0) {
+                smoothedLandmarks = smoothLandmarks(smoothedLandmarks, res.faceLandmarks[0]);
+                const frameSample = extractLiveFrameMetrics(smoothedLandmarks, videoEl.videoWidth, videoEl.videoHeight, true);
+
+                let freshPixels;
+                if (now - lastPixelCheck > 280) {
+                  lastPixelCheck = now;
+                  const sw = 192;
+                  const sh = Math.round((videoEl.videoHeight / videoEl.videoWidth) * 192) || 144;
+                  sampleCanvas.width = sw;
+                  sampleCanvas.height = sh;
+                  const sctx = sampleCanvas.getContext('2d');
+                  if (sctx) {
+                    sctx.save();
+                    sctx.translate(sw, 0);
+                    sctx.scale(-1, 1);
+                    sctx.drawImage(videoEl, 0, 0, sw, sh);
+                    sctx.restore();
+                    freshPixels = analyzeFramePixels(sampleCanvas, smoothedLandmarks.map((lm) => ({ ...lm, x: 1 - lm.x })));
+                    if (freshPixels.obstructionReason) {
+                      accessoryMsg.textContent = freshPixels.obstructionReason;
+                      accessoryAlert.classList.remove('hidden');
+                    } else {
+                      accessoryAlert.classList.add('hidden');
+                    }
+                  }
+                }
+
+                mergeLiveFrame(rollingState, frameSample, freshPixels);
+                if (showMeshOverlay) {
+                  drawMappedFaceOverlay(overlayCanvas, smoothedLandmarks, videoEl.videoWidth, videoEl.videoHeight, true, frameSample);
+                }
+
+                if (now - lastUiSync > 110) {
+                  lastUiSync = now;
+                  const rx = clamp(35 + (frameSample.yawDeg / 46) * 29, 6, 64);
+                  const ry = clamp(17 - (frameSample.pitchDeg / 26) * 12, 5, 29);
+                  radarDot.setAttribute('cx', rx.toFixed(1));
+                  radarDot.setAttribute('cy', ry.toFixed(1));
+                  radarRing.setAttribute('cx', rx.toFixed(1));
+                  radarRing.setAttribute('cy', ry.toFixed(1));
+                  poseText.textContent = `Yaw ${frameSample.yawDeg >= 0 ? '+' : ''}${frameSample.yawDeg.toFixed(0)}° · Pitch ${frameSample.pitchDeg >= 0 ? '+' : ''}${frameSample.pitchDeg.toFixed(0)}° · Roll ${frameSample.rollDeg.toFixed(0)}°`;
+                  activeZoneText.textContent = `Active Zone: ${rollingState.activePose.replace(/_/g, ' ')}`;
+                  hudFrames.textContent = `${rollingState.sampleCount} live frames`;
+                  stageLandmarkLabel.textContent = frameSample.faceBoxScale < 0.23
+                    ? 'Move closer for higher precision'
+                    : frameSample.faceBoxScale > 0.72
+                    ? 'Step back slightly for full jaw/hairline'
+                    : `${smoothedLandmarks.length} landmarks mapped`;
+
+                  saveSnapshotBtn.disabled = false;
+                  panelPrimaryBtn.disabled = false;
+                  renderPoseMatrix(rollingState.activePose);
+                  currentResult = buildLiveScanResult(rollingState);
+                  renderResultCard(currentResult);
+                }
+              } else {
+                smoothedLandmarks = null;
+                poseText.textContent = 'Center your face in frame';
+                activeZoneText.textContent = 'Scanning pose...';
+                stageLandmarkLabel.textContent = 'Ready to map';
+                const ctx = overlayCanvas.getContext('2d');
+                if (ctx) ctx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+              }
+            }
+            rafId = requestAnimationFrame(tick);
+          };
+          rafId = requestAnimationFrame(tick);
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : 'Permission denied';
+          cameraErrorBox.textContent = `Could not open camera (${msg}). Allow camera permission in your browser to map your face.`;
+          cameraErrorBox.classList.remove('hidden');
+        }
+      }
+
+      function saveSnapshot() {
+        if (!rollingState.sampleCount) return;
+        let snapUrl;
+        if (videoEl.videoWidth > 0) {
+          const c = document.createElement('canvas');
+          c.width = videoEl.videoWidth;
+          c.height = videoEl.videoHeight;
+          const ctx = c.getContext('2d');
+          if (ctx) {
+            ctx.translate(videoEl.videoWidth, 0);
+            ctx.scale(-1, 1);
+            ctx.drawImage(videoEl, 0, 0, videoEl.videoWidth, videoEl.videoHeight);
+            snapUrl = c.toDataURL('image/jpeg', 0.88);
+          }
+          if (smoothedLandmarks) {
+            savedSnapshotMesh = {
+              landmarks: smoothedLandmarks.map((lm) => ({ ...lm, x: 1 - lm.x })),
+              metrics: extractLiveFrameMetrics(smoothedLandmarks, videoEl.videoWidth, videoEl.videoHeight, true),
+              w: videoEl.videoWidth,
+              h: videoEl.videoHeight,
+            };
+          }
+        }
+        const entry = buildLiveScanResult(rollingState, snapUrl);
+        entry.id = `saved-${Date.now()}`;
+        entry.subjectName = `Saved Snapshot (${entry.connectedAngles}/21 Angles)`;
+        currentResult = entry;
+        history = [entry, ...history].slice(0, 12);
+        renderResultCard(entry);
+        renderHistory();
+      }
+
+      // Event Listeners
+      $('standbyStartBtn').addEventListener('click', () => void startCamera());
+      startCameraBtn.addEventListener('click', () => void startCamera());
+      stopCameraBtn.addEventListener('click', () => {
+        stopCameraStream();
+        const ctx = overlayCanvas.getContext('2d');
+        if (ctx) ctx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+        setMode('idle');
+      });
+      resetDataBtn.addEventListener('click', () => {
+        rollingState = createEmptyRollingState();
+        lastPixelCheck = 0;
+        lastUiSync = 0;
+        currentResult = null;
+        accessoryAlert.classList.add('hidden');
+        saveSnapshotBtn.disabled = true;
+        panelPrimaryBtn.disabled = true;
+        renderPoseMatrix(null);
+        renderResultCard(null);
+      });
+      saveSnapshotBtn.addEventListener('click', saveSnapshot);
+      toggleMeshBtn.addEventListener('click', () => {
+        showMeshOverlay = !showMeshOverlay;
+        overlayCanvas.classList.toggle('hidden', !showMeshOverlay);
+        meshBtnIcon.innerHTML = showMeshOverlay ? EYE_SVG : EYE_OFF_SVG;
+      });
+      topPrimaryBtn.addEventListener('click', () => {
+        $('scanner').scrollIntoView({ behavior: 'smooth' });
+        if (cameraMode === 'live') saveSnapshot();
+        else void startCamera();
+      });
+      panelPrimaryBtn.addEventListener('click', () => {
+        if (cameraMode === 'live') saveSnapshot();
+        else void startCamera();
+      });
+      clearHistoryBtn.addEventListener('click', () => {
+        history = [];
+        renderHistory();
+      });
+
+      // Init
+      buildPoseGrid();
+      renderStaticLore();
+      renderResultCard(null);
+      renderHistory();
+      setMode('idle');
+
+      getVideoLandmarker()
+        .then(() => {
+          isModelLoading = false;
+          if (cameraMode === 'idle') stageLandmarkLabel.textContent = 'Ready to map';
+        })
+        .catch(() => {
+          isModelLoading = false;
+          if (cameraMode === 'idle') stageLandmarkLabel.textContent = 'Ready to map';
+        });
+
+      if (navigator.permissions && navigator.permissions.query) {
+        navigator.permissions
+          .query({ name: 'camera' })
+          .then((status) => {
+            if (status.state === 'granted') void startCamera();
+          })
+          .catch(() => {});
+      }
+    </script>
+  </body>
+</html>
